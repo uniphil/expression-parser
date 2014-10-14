@@ -1,0 +1,16 @@
+{
+  "name": "expression-compiler",
+  "version": "0.0.1",
+  "description": "",
+  "main": "test.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "uniphil",
+  "license": "BSD",
+  "devDependencies": {
+    "chai": "^1.9.2",
+    "mocha": "^1.21.4",
+    "ramda": "^0.6.0"
+  }
+}
