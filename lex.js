@@ -31,96 +31,33 @@ var tokenStates = [
     exit: 'literal'
   },
   {
-    name: 'letter',
-    match: /[a-zA-Z_]/,
-    next: ['letter', 'num_after_letter'],
+    name: 'first_letter',
+    match: /[a-zA-Z_]/,  // like \w, but without 0-9
+    next: ['nth_letter'],
     enter: true,
     exit: 'name'
   },
   {
-    name: 'num_after_letter',
-    match: /\d/,
-    next: ['letter', 'num_after_letter'],
+    name: 'nth_letter',
+    match: /\w/,
+    next: ['nth_letter'],
     enter: false,
     exit: 'name'
   },
   {
-    name: 'open_paren',
-    match: /\(/,
-    next: [],
-    enter: true,
-    exit: 'paren'
-  },
-  {
-    name: 'open_bracket',
-    match: /\[/,
-    next: [],
-    enter: true,
-    exit: 'paren'
-  },
-  {
-    name: 'close_paren',
-    match: /\)/,
-    next: [],
-    enter: true,
-    exit: 'paren'
-  },
-  {
-    name: 'close_bracket',
-    match: /\]/,
+    name: 'paren',
+    match: /[\(\)\[\]]/,
     next: [],
     enter: true,
     exit: 'paren'
   },
   {
     name: 'caret',
-    match: /\^/,
+    match: /[\+\-\*\/\^<>]/,
     next: [],
     enter: true,
     exit: 'operator'
   },
-  {
-    name: 'star',
-    match: /\*/,
-    next: [],
-    enter: true,
-    exit: 'operator'
-  },
-  {
-    name: 'div',
-    match: /\//,
-    next: [],
-    enter: true,
-    exit: 'operator'
-  },
-  {
-    name: 'plus',
-    match: /\+/,
-    next: [],
-    enter: true,
-    exit: 'operator'
-  },
-  {
-    name: 'minus',
-    match: /\-/,
-    next: [],
-    enter: true,
-    exit: 'operator'
-  },
-  {
-    name: 'less',
-    match: /</,
-    next: [],
-    enter: true,
-    exit: 'operator'
-  },
-  {
-    name: 'greater',
-    match: />/,
-    next: [],
-    enter: true,
-    exit: 'operator'
-  }
 ];
 
 
