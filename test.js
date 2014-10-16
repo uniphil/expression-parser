@@ -75,4 +75,19 @@ describe('Lexer', function() {
          {type: 'paren', value: ')'}]);
     });
   });
+  describe('invalid tokens', function() {
+    it('should give 1-char tokens of type "null"', function() {
+      assert.deepEqual(lex('!'), [{type: null, value: '!'}]);
+      assert.deepEqual(
+        lex('!@&'),
+        [{type: null, value: '!'},
+         {type: null, value: '@'},
+         {type: null, value: '&'}]);
+      assert.deepEqual(
+        lex('abc!def'),
+        [{type: 'name', value: 'abc'},
+         {type: null, value: '!'},
+         {type: 'name', value: 'def'}]);
+    });
+  });
 });
