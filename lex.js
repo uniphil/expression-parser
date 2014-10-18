@@ -19,7 +19,7 @@ var chomp = function(str) {
 
 var chompReduce = function(str) {
   function reducer(initial, leftover) {
-    if (!leftover) return initial;  // nothing more to eat!
+    if (!leftover) { return initial; }  // nothing more to eat!
     var result = chomp(leftover);
     return reducer(R.append(result.token, initial), result.leftover);
   }

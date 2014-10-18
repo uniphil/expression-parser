@@ -1,0 +1,28 @@
+{
+  /* see www.jshint.com/docs/options/ */
+  "bitwise": true,
+  "camelcase": true,
+  "curly": true,
+  "eqeqeq": true,
+  "es3": true,
+  "freeze": true,
+  "immed": true,
+  "indent": 2,
+  "latedef": true,
+  "newcap": true,
+  "quotmark": "single",
+  "undef": true,
+  "maxlen": 124,
+  "unused": true,
+  "globals" : {
+    /* suppress warnings for npm/browserify stuff */
+    "__dirname": false,
+    "exports": false,
+    "module": false,
+    "require": false,
+    "describe": false,
+    "it": false
+  },
+  "devel": true,
+  "browser": true
+}
