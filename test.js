@@ -1,10 +1,12 @@
 require('mocha');
 var assert = require('chai').assert;
 
-var lex = require('./lex');
+var parse = require('./parse');
 
 
 describe('Lexer', function() {
+  var lex = parse.lex;
+
   describe('individual symbols', function() {
     it('should detect the right type of token', function() {
       assert.propertyVal(lex(' ')[0], 'type', 'space', 'spaces are spaces');
@@ -88,6 +90,36 @@ describe('Lexer', function() {
         [{type: 'name', value: 'abc'},
          {type: null, value: '!'},
          {type: 'name', value: 'def'}]);
+    });
+  });
+});
+
+
+describe('Parser', function() {
+
+  describe('edge cases', function() {
+    // it('should error on empty expression', function() {
+    //   assert.throws(function() { parse([]); }, parse.ParseError);
+    // });
+    // it('should error if the expression is just whitespace', function() {
+    //   assert.throws(
+    //     function() { parse([{type: 'space', value: ' '}]); },
+    //     parse.ParseError);
+    // });
+  });
+  // describe('simple cases', function() {
+  //   it('should parse a simple name', function() {
+  //     assert.deepEqual(
+  //       parse([{type: 'name', value: 'a'}]),
+  //       )
+  //   });
+  // });
+  describe('parens', function() {
+    it('should complain about mismatched parens', function() {
+      assert.throws(function() { parse('('); }, parse.ParseError);
+      assert.throws(function() { parse(')'); }, parse.ParseError);
+      assert.throws(function() { parse('(()'); }, parse.ParseError);
+      assert.throws(function() { parse('())'); }, parse.ParseError);
     });
   });
 });
