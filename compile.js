@@ -8,7 +8,11 @@ var transformers = {
              subs: [node.expr] };
   },
   literal: function(node) {
-    return { c: function() { return '' + node.value; },
+    var str = '' + node.value;
+    if (!R.contains('.', str)) {
+      str += '.0';
+    }
+    return { c: function() { return str; },
              subs: [] };
   },
   name: function(node) {
@@ -20,8 +24,17 @@ var transformers = {
              subs: node.args };
   },
   operator: function(node) {
+    if (node.op === 'power') {
+      // special case grr
+      return {
+        c: function powerize(args) {
+          if (args.length === 1) { return args[0]; }
+          return 'symbols["pow"](' + args[0] + ', ' + powerize(args.slice(1)) + ')';
+        },
+        subs: node.args
+      };
+    }
     var symbols = {
-      power: '^',
       times: '*',
       over: '/',
       plus: '+',
