@@ -169,5 +169,37 @@ describe('Parser', function() {
     it('should work for 1^2-3', function() {
       assert.doesNotThrow(function() { parse('1^2-3'); }, parse.ParseError);
     });
+    it('should work on some samples from the mojulo gallery', function() {
+      assert.doesNotThrow(function() {
+        parse('x*y*time');
+      }, parse.ParseError);
+      assert.doesNotThrow(function() {
+        parse('r*r*sin(time/30)');
+      }, parse.ParseError);
+      assert.doesNotThrow(function() {
+        parse('x^2-y^2+time*3000');
+      }, parse.ParseError);
+      assert.doesNotThrow(function() {
+        // note: had to remove % mod operators... should expression handle those???
+        parse('10*((((100-x)^2+y^2)^0.5+time))+10*((((x)^2+y^2)^0.5+time))');
+      }, parse.ParseError);
+      assert.doesNotThrow(function() {
+        parse('1270000*(cos(r/6-time/10)/r+cos((x*x+(y-100)*(y-100))^0.5/6-ti' +
+              'me/10)/(x*x+(y-100)*(y-100))^0.5+1)');
+      }, parse.ParseError);
+      assert.doesNotThrow(function() {
+        // note: add to add an arg to rand(), because expression does not currently
+        // handle empty expressions
+        parse('((((x+50*sin(time*0.05)-50*cos(time*0.05))-50)^2+((y-25*cos(ti' +
+              'me*0.05)+25*sin(time*0.01))-50)^2)/100)-(rand(1)*7+sin((time-1' +
+              '0000)*0.3)+1)^sin((time-10000)*0.07)-1800');
+      }, parse.ParseError);
+      assert.doesNotThrow(function() {
+        parse('40*(sin((x-50)/(4+sin(time/2)))+(1/3)*sin(3*(x-50)/(4+sin(time' +
+              '/2)))+(1/5)*sin(5*(x-50)/(4+sin(time/2))))*(sin((y-50)/(4+sin(' +
+              'time/2)))+(1/3)*sin(3*(y-50)/(4+sin(time/2)))+(1/5)*sin(5*(y-5' +
+              '0)/(4+sin(time/2))))');
+      }, parse.ParseError);
+    });
   });
 });
