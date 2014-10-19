@@ -206,6 +206,21 @@ var pullFunctions = function(tokens) {
 };
 
 
+var validateHasValue = function(tokens) {
+  var hasValue = R.reduce(function(foundValue, token) {
+    if (R.contains(token.type, ['literal', 'name', 'expr'])) {
+      return true;
+    } else {
+      return foundValue;
+    }
+  }, false);
+  if (!hasValue(tokens)) {
+    throw new ParseError('Expression has no value');
+  }
+  return tokens;
+};
+
+
 var pullValues = R.map(function(token) {
   if (token.type === 'name') {
     return {
@@ -258,7 +273,42 @@ var simplifyUnaryPlus = function(tokens) {
 };
 
 var pullUnaryMinus = function(tokens) {
-  return tokens;
+  var outputTokens = [],
+      token,
+      prevToken,
+      nextToken;
+  for (var i = tokens.length - 1; i >= 0; i--) {
+    token = tokens[i];
+    prevToken = tokens[i - 1];
+    nextToken = tokens[i + 1];
+    if (token.type === 'operator' && token.value === '-') {
+      if (!prevToken || prevToken.type === 'operator') {
+        var prevOut = outputTokens[0],
+            argToken;
+        if (prevOut && prevOut.type === 'operator' && prevOut.op === 'minus') {
+          argToken = outputTokens.shift();
+        } else {
+          argToken = nextToken;
+        }
+        outputTokens.unshift({
+          type: 'operator',
+          op: 'minus',
+          args: [{
+            type: 'literal',
+            value: 0
+          }, argToken]
+        });
+      } else {
+        outputTokens.unshift(nextToken);  // we skipped it because we saw - coming
+        outputTokens.unshift(token);
+      }
+    } else {
+      if (!(prevToken && prevToken.type === 'operator' && prevToken.value === '-')) {
+        outputTokens.unshift(token);
+      } // else skip -- minus coming next
+    }
+  }
+  return outputTokens;
 };
 
 
@@ -272,9 +322,10 @@ var fixBinaryMinus = normalizeBinary('-', 'minus', 'plus', 0);
 
 var pullPlus = pullBinary('+', 'plus');
 
-var pullLTGT = function(tokens) {
-  return tokens;
-};
+var pullLT = pullBinary('<', 'less');
+
+var pullGT = pullBinary('>', 'greater');
+
 
 var wrapExpr = function(tokens) {
   if (tokens.length > 1) {
@@ -287,15 +338,9 @@ var wrapExpr = function(tokens) {
   };
 };
 
-var validateHasValue = function(tokens) {
-  if (tokens.length === 0) {
-    throw new ParseError('Expression has no value');
-  }
-  return tokens;
-};
-
 parseTokens = R.pipe(
   pullSubExpressions,
+  validateHasValue,
   pullFunctions,
   pullValues,
   validateOperators,
@@ -306,9 +351,9 @@ parseTokens = R.pipe(
   pullTimes,
   fixBinaryMinus,
   pullPlus,
-  pullLTGT,
-  wrapExpr,
-  validateHasValue
+  pullLT,
+  pullGT,
+  wrapExpr
 );
 
 var parse = R.pipe(

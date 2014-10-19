@@ -98,28 +98,71 @@ describe('Lexer', function() {
 describe('Parser', function() {
 
   describe('edge cases', function() {
-    // it('should error on empty expression', function() {
-    //   assert.throws(function() { parse([]); }, parse.ParseError);
-    // });
-    // it('should error if the expression is just whitespace', function() {
-    //   assert.throws(
-    //     function() { parse([{type: 'space', value: ' '}]); },
-    //     parse.ParseError);
-    // });
+    it('should error on empty expression', function() {
+      assert.throws(function() { parse(''); }, parse.ParseError);
+      assert.throws(function() { parse('()'); }, parse.ParseError);
+      assert.throws(function() { parse('f()'); }, parse.ParseError);
+      assert.throws(function() { parse('1+()'); }, parse.ParseError);
+    });
   });
-  // describe('simple cases', function() {
-  //   it('should parse a simple name', function() {
-  //     assert.deepEqual(
-  //       parse([{type: 'name', value: 'a'}]),
-  //       )
-  //   });
-  // });
+  describe('simple cases', function() {
+    it('should parse a simple literal value', function() {
+      assert.equal(parse('1').expr.type, 'literal');
+    });
+    it('should parse a simple name', function() {
+      assert.equal(parse('a').expr.type, 'name');
+    });
+    it('should parse a function call', function() {
+      assert.equal(parse('f(x)').expr.type, 'func');
+    });
+    it('should parse operators', function() {
+      assert.equal(parse('-1').expr.type, 'operator');
+      assert.equal(parse('1-2').expr.type, 'operator');
+      assert.equal(parse('1+2').expr.type, 'operator');
+      assert.equal(parse('1*2').expr.type, 'operator');
+      assert.equal(parse('1/2').expr.type, 'operator');
+      assert.equal(parse('1^2').expr.type, 'operator');
+    });
+  });
   describe('parens', function() {
     it('should complain about mismatched parens', function() {
       assert.throws(function() { parse('('); }, parse.ParseError);
       assert.throws(function() { parse(')'); }, parse.ParseError);
       assert.throws(function() { parse('(()'); }, parse.ParseError);
       assert.throws(function() { parse('())'); }, parse.ParseError);
+    });
+    it('should parse contents as a subexpression', function() {
+      assert.equal(parse('(1)').expr.type, 'expr');
+      assert.equal(parse('(1)').expr.expr.type, 'literal');
+    });
+    it('should treat function expressions as subexpressions', function() {
+      assert.equal(parse('sin(t)').expr.type, 'func');
+      assert.equal(parse('sin(t)').expr.args[0].type, 'expr');
+    });
+  });
+  describe('operators', function() {
+    it('should error for trailing operators', function() {
+      assert.throws(function() { parse('1+'); }, parse.ParseError);
+    });
+    it('should error for leading non-unary operators', function() {
+      assert.throws(function() { parse('/1'); }, parse.ParseError);
+    });
+  });
+  describe('plus', function() {
+    it('should turn unary + into a noop', function() {
+      assert.equal(parse('+1').expr.type, 'literal');
+      assert.equal(parse('++1').expr.type, 'literal');
+    });
+    it('should pull minus into plus unary-minus', function() {
+      assert.equal(parse('1-2').expr.op, 'plus');
+      assert.equal(parse('1-2').expr.args[1].type, 'operator');
+    });
+    it('should group plusses', function() {
+      assert.equal(parse('1+2+3').expr.args.length, 3);
+      assert.equal(parse('1+2-3').expr.args.length, 3);
+      assert.equal(parse('1-2+3').expr.args.length, 3);
+      assert.equal(parse('1-2-3').expr.args.length, 3);
+      assert.equal(parse('1-2-3').expr.op, 'plus');
     });
   });
 });
