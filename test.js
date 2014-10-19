@@ -157,6 +157,13 @@ describe('Parser', function() {
       assert.equal(parse('1-2').expr.op, 'plus');
       assert.equal(parse('1-2').expr.args[1].type, 'operator');
     });
+    it('should pull unary minuses together', function() {
+      assert.equal(parse('-1').expr.op, 'minus', '-1');
+      assert.equal(parse('--1').expr.op, 'minus', '--1');
+      assert.equal(parse('--1').expr.args[1].op, 'minus', '--1');
+      assert.equal(parse('1--2').expr.op, 'plus', '1--2');
+      assert.equal(parse('1--2').expr.args[1].op, 'minus', '1--2');
+    });
     it('should group plusses', function() {
       assert.equal(parse('1+2+3').expr.args.length, 3);
       assert.equal(parse('1+2-3').expr.args.length, 3);
