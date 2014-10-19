@@ -169,6 +169,9 @@ describe('Parser', function() {
     it('should work for 1^2-3', function() {
       assert.doesNotThrow(function() { parse('1^2-3'); }, parse.ParseError);
     });
+    it('should work for 1--2', function() {
+      assert.doesNotThrow(function() { parse('1--2'); }, parse.ParseError);
+    });
     it('should work on some samples from the mojulo gallery', function() {
       assert.doesNotThrow(function() {
         parse('x*y*time');
