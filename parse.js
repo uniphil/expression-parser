@@ -243,7 +243,7 @@ var simplifyUnaryPlus = function(tokens) {
   var token,
       tokenBefore,
       outputTokens = [];
-  for (var i = tokens.length - 1; i > 0; i--) {
+  for (var i = tokens.length - 1; i >= 0; i--) {
     tokenBefore = tokens[i - 1];
     token = tokens[i];
     if (token.type === 'operator' && token.value === '+') {
