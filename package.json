@@ -1,15 +1,22 @@
 {
   "name": "expression-compiler",
+  "repository": "git@github.com:uniphil/expression.git",
   "version": "0.0.1",
   "description": "",
   "main": "test.js",
   "scripts": {
-    "test": "mocha && jshint *.js && jscs *.js"
+    "test": "gulp test"
   },
   "author": "uniphil",
   "license": "BSD",
   "devDependencies": {
     "chai": "^1.9.2",
+    "gulp": "^3.8.8",
+    "gulp-jscs": "^1.2.0",
+    "gulp-jshint": "^1.8.5",
+    "gulp-load-plugins": "^0.7.0",
+    "gulp-mocha": "^1.1.1",
+    "jshint-stylish": "^1.0.0",
     "mocha": "^1.21.4",
     "ramda": "^0.6.0"
   }
