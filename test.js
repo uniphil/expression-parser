@@ -165,4 +165,9 @@ describe('Parser', function() {
       assert.equal(parse('1-2-3').expr.op, 'plus');
     });
   });
+  describe('regressions', function() {
+    it('should work for x^2-y^2+time*3000', function() {
+      assert.doesNotThrow(function() { parse('x^2-y^2+time*3000'); }, parse.ParseError);
+    });
+  });
 });
