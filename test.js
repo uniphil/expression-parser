@@ -166,8 +166,8 @@ describe('Parser', function() {
     });
   });
   describe('regressions', function() {
-    it('should work for x^2-y^2+time*3000', function() {
-      assert.doesNotThrow(function() { parse('x^2-y^2+time*3000'); }, parse.ParseError);
+    it('should work for 1^2-3', function() {
+      assert.doesNotThrow(function() { parse('1^2-3'); }, parse.ParseError);
     });
   });
 });
