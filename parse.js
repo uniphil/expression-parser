@@ -114,7 +114,8 @@ var pullBinary = function(symbol, op) {
           outputTokens.push(outputToken);
         }
       } else if (token.type === 'operator' && token.op === op) {
-        if (prevToken && !(prevToken.type === 'operator' && (prevToken.op === op || prevToken.value === symbol))) {
+        if (prevToken && !(prevToken.type === 'operator' &&
+            (prevToken.op === op || prevToken.value === symbol))) {
           if (lastOut) {
             Array.prototype.push.apply(lastOut.args, token.args);
           } else {
@@ -282,7 +283,7 @@ var pullUnaryMinus = function(tokens) {
     prevToken = tokens[i - 1];
     nextToken = tokens[i + 1];
     if (token.type === 'operator' && token.value === '-') {
-      if (!prevToken || prevToken.type === 'operator') {
+      if (!prevToken || prevToken.type === 'operator' && prevToken.op !== 'power') {
         var prevOut = outputTokens[0],
             argToken;
         if (prevOut && prevOut.type === 'operator' && prevOut.op === 'minus') {

@@ -296,4 +296,74 @@ The parser is not quite there yet, but close. Mostly it is missing `template` ke
 
 ### x^2-y^2+time*3000
 
-... oops, this one breaks the parser. Issue time...
+```JSON
+{
+  "type": "expr",
+  "expr": {
+    "type": "operator",
+    "op": "plus",
+    "normalized": "plus",
+    "args": [
+      {
+        "type": "operator",
+        "op": "power",
+        "args": [
+          {
+            "type": "name",
+            "template": "x",
+            "key": "x"
+          },
+          {
+            "type": "literal",
+            "template": "2",
+            "value": 2
+          }
+        ]
+      },
+      {
+        "type": "operator",
+        "op": "minus",
+        "args": [
+          {
+            "type": "literal",
+            "template": "0",
+            "value": 0
+          },
+          {
+            "type": "operator",
+            "op": "power",
+            "args": [
+              {
+                "type": "name",
+                "template": "y",
+                "key": "y"
+              },
+              {
+                "type": "literal",
+                "template": "2",
+                "value": 2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "operator",
+        "op": "times",
+        "args": [
+          {
+            "type": "name",
+            "template": "time",
+            "key": "time"
+          },
+          {
+            "type": "literal",
+            "template": "3000",
+            "value": 3000
+          }
+        ]
+      }
+    ]
+  }
+}
+```

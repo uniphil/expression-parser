@@ -165,4 +165,9 @@ describe('Parser', function() {
       assert.equal(parse('1-2-3').expr.op, 'plus');
     });
   });
+  describe('regressions', function() {
+    it('should work for 1^2-3', function() {
+      assert.doesNotThrow(function() { parse('1^2-3'); }, parse.ParseError);
+    });
+  });
 });
