@@ -5,7 +5,7 @@ var tokenMatches = [
   { type: 'literal',  match: /^(\d*\.\d+|\d+)/ },
   { type: 'name',     match: /^[a-zA-Z_]\w*/ },
   { type: 'paren',    match: /^[\(\)\[\]]/ },
-  { type: 'operator', match: /^[\+\-\*\/\^<>]/ }
+  { type: 'operator', match: /^[\+\-%\*\/\^<>]/ }
 ];
 
 var chomp = function(str) {
