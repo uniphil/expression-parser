@@ -127,6 +127,9 @@ describe('Parser', function() {
       assert.equal(parse('1/2').expr.type, 'operator');
       assert.equal(parse('1^2').expr.type, 'operator');
     });
+    it('should puke on invalid operators', function() {
+      assert.throws(function() { parse('$'); }, parse.ParseError);
+    });
   });
   describe('parens', function() {
     it('should complain about mismatched parens', function() {
@@ -248,6 +251,11 @@ describe('Function compiler', function() {
     it('should execute named functions from the context', function() {
       var ctx = { times2: function(n) { return n * 2; } };
       assert.equal(compileF('times2(1)')(ctx), 2);
+    });
+  });
+  describe('invalid expressions', function() {
+    it('should just let the parser throw on error', function() {
+      assert.throws(function() { compileF('#'); }, parse.ParseError);
     });
   });
   describe('sample expressions', function() {
