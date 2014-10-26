@@ -16,6 +16,7 @@ describe('Lexer', function() {
       assert.propertyVal(lex('a')[0], 'type', 'name', '"a" is a name');
       assert.propertyVal(lex('+')[0], 'type', 'operator', 'plus is an operator');
       assert.propertyVal(lex('-')[0], 'type', 'operator', 'minus is an operator');
+      assert.propertyVal(lex('%')[0], 'type', 'operator', 'mod is an operator');
       assert.propertyVal(lex('*')[0], 'type', 'operator', 'multiply is an operator');
       assert.propertyVal(lex('/')[0], 'type', 'operator', 'divide is an operator');
       assert.propertyVal(lex('^')[0], 'type', 'operator', 'caret is an operator');
@@ -31,6 +32,7 @@ describe('Lexer', function() {
       assert.propertyVal(lex('a')[0], 'value', 'a');
       assert.propertyVal(lex('foo')[0], 'value', 'foo');
       assert.propertyVal(lex('+')[0], 'value', '+');
+      assert.propertyVal(lex('%')[0], 'value', '%');
       assert.propertyVal(lex('(')[0], 'value', '(');
       // and on and on...
     });
@@ -120,6 +122,7 @@ describe('Parser', function() {
       assert.equal(parse('-1').expr.type, 'operator');
       assert.equal(parse('1-2').expr.type, 'operator');
       assert.equal(parse('1+2').expr.type, 'operator');
+      assert.equal(parse('1%2').expr.type, 'operator');
       assert.equal(parse('1*2').expr.type, 'operator');
       assert.equal(parse('1/2').expr.type, 'operator');
       assert.equal(parse('1^2').expr.type, 'operator');
@@ -253,6 +256,7 @@ describe('Function compiler', function() {
       assert.equal(compileF('1+2*3^4')(Math), 163);
       assert.equal(compileF('1>2')(), 0);
       assert.equal(compileF('1>0')(), 1);
+      assert.equal(compileF('3%2')(), 1);
       assert.closeTo(compileF('sin(PI)')(Math), 0, eps);
       assert.closeTo(compileF('cos(PI)')(Math), -1, eps);
     });
