@@ -321,6 +321,8 @@ var fixDivisons = normalizeBinary('/', 'over', 'times', 1);
 
 var pullTimes = pullBinary('*', 'times');
 
+var pullMod = pullBinary('%', 'mod');
+
 var fixBinaryMinus = normalizeBinary('-', 'minus', 'plus', 0);
 
 var pullPlus = pullBinary('+', 'plus');
@@ -352,6 +354,7 @@ parseTokens = R.pipe(
   pullUnaryMinus,
   fixDivisons,
   pullTimes,
+  pullMod,
   fixBinaryMinus,
   pullPlus,
   pullLT,
