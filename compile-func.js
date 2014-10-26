@@ -55,9 +55,27 @@ var compileAST = function comp(ASTNode) {
 };
 
 
+var functionify = function(expr) {
+  var templateFn = function(symbols, expr) {
+    symbols = symbols || {};
+    return expr;
+  };
+  var body = templateFn
+    .toString()
+    .split('\n')
+    .slice(1, -1)  // drop function header and closing }
+    .join('\n')
+    .replace('expr', expr);
+  /* jslint evil:true */
+  return new Function('symbols', body);
+  /* jslint evil:false */
+};
+
+
 var compile = R.pipe(
   parse,
-  compileAST
+  compileAST,
+  functionify
 );
 
 
