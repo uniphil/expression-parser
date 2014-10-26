@@ -300,7 +300,9 @@ var pullUnaryMinus = function(tokens) {
           }, argToken]
         });
       } else {
-        outputTokens.unshift(nextToken);  // we skipped it because we saw - coming
+        if (!(nextToken && nextToken.type === 'operator' && nextToken.value === '-')) {
+          outputTokens.unshift(nextToken);  // we skipped it because we saw - coming
+        }
         outputTokens.unshift(token);
       }
     } else {
