@@ -3,7 +3,7 @@
   "repository": "git@github.com:uniphil/expression.git",
   "version": "0.0.1",
   "description": "",
-  "main": "test.js",
+  "main": "compile-func.js",
   "scripts": {
     "test": "gulp test"
   },

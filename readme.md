@@ -1,9 +1,30 @@
 expression
 ==========
 
-[![Build Status](https://travis-ci.org/uniphil/expression.svg)](https://travis-ci.org/uniphil/expression)
+[![Build Status](https://travis-ci.org/uniphil/expression.svg?branch=master)](https://travis-ci.org/uniphil/expression)
 
 fun with math expressions
+
+
+Install
+-------
+
+```bash
+$ npm install expression-compiler
+```
+
+
+Usage
+-----
+
+```node
+> var compile = require('expression');
+undefined
+> var var exprFn = compile('c*sin(2*t)+1');
+undefined
+> exprFn({c: 0.5, sin: Math.sin, t: Math.PI});
+0.9999999999999999
+```
 
 
 Parsing
@@ -225,7 +246,7 @@ The parser is not quite there yet, but close. Mostly it is missing `template` ke
 
 ### sin((r+time)/A)*2
 
-```
+```JSON
 {
   "type": "expr",
   "expr": {
