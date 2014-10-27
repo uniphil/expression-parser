@@ -1,4 +1,5 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.expression=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function (global){
 var R = _dereq_('ramda');
 var parse = _dereq_('./parse');
 
@@ -87,6 +88,20 @@ var asmCompileAST = (function(transformers) {
         c: function(args) { return '+' + node.key + '(' + args[0] + ')'; },
         subs: node.args
       };
+    },
+    operator: function(node) {
+      if (node.op === 'power') {
+        // special case grr
+        return {
+          c: function powerize(args) {
+            if (args.length === 1) { return args[0]; }
+            return 'pow(' + args[0] + ', ' + powerize(args.slice(1)) + ')';
+          },
+          subs: node.args
+        };
+      } else {
+        return transformers.operator(node);
+      }
     }
   });
   return function asmComp(ASTNode, funcs, vars) {
@@ -96,6 +111,9 @@ var asmCompileAST = (function(transformers) {
       vars.push(ASTNode.key);
     } else if (ASTNode.type === 'func') {
       funcs.push(ASTNode.key);
+    } else if (ASTNode.type === 'operator' && ASTNode.op === 'power') {
+      // special-case grr...
+      funcs.push('pow');
     }
     var transformer = ASMTransformers[ASTNode.type](ASTNode);
     return {
@@ -125,9 +143,10 @@ var _ASMTemplate = function(stdlib, foreign) {
 
 
 var asmify = function(stuff) {
+  var g = (typeof window !== 'undefined') ? window : global;
   var expr = stuff.expr,
       vars = stuff.vars,
-      stds = R.filter(function(f) { return !!this.Math[f]; }, stuff.funcs),
+      stds = R.filter(function(f) { return !!g.Math[f]; }, stuff.funcs),
       funcs = R.difference(stuff.funcs, stds);
 
   var importStd = function(imports) {
@@ -163,7 +182,7 @@ var asmify = function(stuff) {
   var asmFn = new Function('stdlib', 'foreign', body);
   /* jslint evil:false */
 
-  var exec = asmFn(this, {}).exec;
+  var exec = asmFn(g, {}).exec;
 
   return function(ctx) {
     var args = vars.map(function(v) { return ctx[v]; });
@@ -192,6 +211,7 @@ compile.asm.compileAST = asmCompileAST;
 
 module.exports = compile;
 
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./parse":4,"ramda":3}],2:[function(_dereq_,module,exports){
 var R = _dereq_('ramda');
 
