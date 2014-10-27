@@ -73,6 +73,104 @@ var functionify = function(expr) {
 };
 
 
+var asmCompileAST = (function(transformers) {
+  var ASMTransformers = R.mixin(transformers, {
+    name: function(node) {
+      return {
+        c: function() { return node.key; },
+        subs: []
+      };
+    },
+    func: function(node) {
+      return {
+        c: function(args) { return '+' + node.key + '(' + args[0] + ')'; },
+        subs: node.args
+      };
+    }
+  });
+  return function asmComp(ASTNode, funcs, vars) {
+    funcs = funcs || [];
+    vars = vars || [];
+    if (ASTNode.type === 'name') {
+      vars.push(ASTNode.key);
+    } else if (ASTNode.type === 'func') {
+      funcs.push(ASTNode.key);
+    }
+    var transformer = ASMTransformers[ASTNode.type](ASTNode);
+    return {
+      expr: transformer.c(R.map(function(node) {
+        return asmComp(node, funcs, vars).expr;
+      }, transformer.subs)),
+      funcs: funcs,
+      vars: vars
+    };
+  };
+})(transformers);
+
+
+var _ASMTemplate = function(stdlib, foreign) {
+  'use asm';
+
+  var sin = stdlib.Math.sin;
+  var f = foreign.f;
+
+  function exec(t) {
+    t = +t;
+    return +(+f(+sin(t)));
+  }
+
+  return { exec: exec };
+};
+
+
+var asmify = function(stuff) {
+  var expr = stuff.expr,
+      vars = stuff.vars,
+      stds = R.filter(function(f) { return !!this.Math[f]; }, stuff.funcs),
+      funcs = R.difference(stuff.funcs, stds);
+
+  var importStd = function(imports) {
+    return imports
+      .map(function(i) { return 'var ' + i + ' = stdlib.Math.' + i + ';'; })
+      .join('\n');
+  };
+  var importForeign = function(foreigns) {
+    return foreigns
+      .map(function(f) { return 'var ' + f + ' = foreign.' + f + ';'; })
+      .join('\n');
+  };
+  var acceptVars = function(vars) {
+    return 'exec(' + vars.join(', ') + ')';
+  };
+  var coerceVars = function(vars) {
+    return vars
+      .map(function(v) { return v + ' = +' + v + ';'; })
+      .join('\n');
+  };
+
+  var body = _ASMTemplate.toString()
+    .split('\n')
+    .slice(1, -1)
+    .join('\n')
+    .replace('var sin = stdlib.Math.sin;', importStd(stds))
+    .replace('var f = foreign.f;', importForeign(funcs))
+    .replace('exec(t)', acceptVars(vars))
+    .replace('t = +t;', coerceVars(vars))
+    .replace('+f(+sin(t))', expr);
+
+  /* jslint evil:true */
+  var asmFn = new Function('stdlib', 'foreign', body);
+  /* jslint evil:false */
+
+  var exec = asmFn(this, {}).exec;
+
+  return function(ctx) {
+    var args = vars.map(function(v) { return ctx[v]; });
+    return exec.apply(null, args);
+  };
+};
+
+
 var compile = R.pipe(
   parse,
   compileAST,
@@ -80,6 +178,15 @@ var compile = R.pipe(
 );
 
 
+var asmCompile = R.pipe(
+  parse,
+  asmCompileAST,
+  asmify
+);
+
+
 compile.compileAST = compileAST;
+compile.asm = asmCompile;
+compile.asm.compileAST = asmCompileAST;
 
 module.exports = compile;

@@ -222,51 +222,56 @@ describe('Parser', function() {
 });
 
 
-describe('Function compiler', function() {
-  describe('literals', function() {
-    it('should return them', function() {
-      assert.equal(compileF('0')(), 0);
-      assert.equal(compileF('1')(), 1);
-      assert.equal(compileF('10')(), 10);
+var testCompiler = function(name, comp) {
+  describe(name, function() {
+    describe('literals', function() {
+      it('should return them', function() {
+        assert.equal(comp('0')(), 0);
+        assert.equal(comp('1')(), 1);
+        assert.equal(comp('10')(), 10);
+      });
+      it('should not be affected by context', function() {
+        assert.equal(comp('0')({0: 1}), 0);
+      });
     });
-    it('should not be affected by context', function() {
-      assert.equal(compileF('0')({0: 1}), 0);
+    describe('names', function() {
+      it('should evaluate symbols from the provided context', function() {
+        assert.equal(comp('a')({a: 0}), 0);
+        assert.equal(comp('foo')({foo: 1}), 1);
+      });
+      it('should ignore unused symbols', function() {
+        assert.equal(comp('0')({a: 1}), 0);
+      });
+      it('should return NaN when variables are missing from the context', function() {
+        assert.ok(isNaN(comp('a')()));
+        assert.ok(isNaN(comp('1+a')()));
+      });
+      it('should work with literals', function() {
+        assert.equal(comp('1+a')({a: 1}), 2);
+      });
+      it('should execute named functions from the context', function() {
+        var ctx = { times2: function(n) { return n * 2; } };
+        assert.equal(comp('times2(1)')(ctx), 2);
+      });
+    });
+    describe('invalid expressions', function() {
+      it('should just let the parser throw on error', function() {
+        assert.throws(function() { comp('#'); }, parse.ParseError);
+      });
+    });
+    describe('sample expressions', function() {
+      it('should work', function() {
+        var eps = 0.00001;  // TODO: pick a non-arbitrary acceptable error
+        assert.equal(comp('1+2*3^4')(Math), 163);
+        assert.equal(comp('1>2')(), 0);
+        assert.equal(comp('1>0')(), 1);
+        assert.equal(comp('3%2')(), 1);
+        assert.closeTo(comp('sin(PI)')(Math), 0, eps);
+        assert.closeTo(comp('cos(PI)')(Math), -1, eps);
+      });
     });
   });
-  describe('names', function() {
-    it('should evaluate symbols from the provided context', function() {
-      assert.equal(compileF('a')({a: 0}), 0);
-      assert.equal(compileF('foo')({foo: 1}), 1);
-    });
-    it('should ignore unused symbols', function() {
-      assert.equal(compileF('0')({a: 1}), 0);
-    });
-    it('should return NaN when variables are missing from the context', function() {
-      assert.ok(isNaN(compileF('a')()));
-      assert.ok(isNaN(compileF('1+a')()));
-    });
-    it('should work with literals', function() {
-      assert.equal(compileF('1+a')({a: 1}), 2);
-    });
-    it('should execute named functions from the context', function() {
-      var ctx = { times2: function(n) { return n * 2; } };
-      assert.equal(compileF('times2(1)')(ctx), 2);
-    });
-  });
-  describe('invalid expressions', function() {
-    it('should just let the parser throw on error', function() {
-      assert.throws(function() { compileF('#'); }, parse.ParseError);
-    });
-  });
-  describe('sample expressions', function() {
-    it('should work', function() {
-      var eps = 0.00001;  // TODO: pick a non-arbitrary acceptable error
-      assert.equal(compileF('1+2*3^4')(Math), 163);
-      assert.equal(compileF('1>2')(), 0);
-      assert.equal(compileF('1>0')(), 1);
-      assert.equal(compileF('3%2')(), 1);
-      assert.closeTo(compileF('sin(PI)')(Math), 0, eps);
-      assert.closeTo(compileF('cos(PI)')(Math), -1, eps);
-    });
-  });
-});
+};
+
+testCompiler('Function constructor compiler', compileF);
+testCompiler('ASM js compiler', compileF.asm);
