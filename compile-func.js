@@ -86,6 +86,20 @@ var asmCompileAST = (function(transformers) {
         c: function(args) { return '+' + node.key + '(' + args[0] + ')'; },
         subs: node.args
       };
+    },
+    operator: function(node) {
+      if (node.op === 'power') {
+        // special case grr
+        return {
+          c: function powerize(args) {
+            if (args.length === 1) { return args[0]; }
+            return 'pow(' + args[0] + ', ' + powerize(args.slice(1)) + ')';
+          },
+          subs: node.args
+        };
+      } else {
+        return transformers.operator(node);
+      }
     }
   });
   return function asmComp(ASTNode, funcs, vars) {
@@ -95,6 +109,9 @@ var asmCompileAST = (function(transformers) {
       vars.push(ASTNode.key);
     } else if (ASTNode.type === 'func') {
       funcs.push(ASTNode.key);
+    } else if (ASTNode.type === 'operator' && ASTNode.op === 'power') {
+      // special-case grr...
+      funcs.push('pow');
     }
     var transformer = ASMTransformers[ASTNode.type](ASTNode);
     return {
@@ -124,9 +141,10 @@ var _ASMTemplate = function(stdlib, foreign) {
 
 
 var asmify = function(stuff) {
+  var g = (typeof window !== 'undefined') ? window : global;
   var expr = stuff.expr,
       vars = stuff.vars,
-      stds = R.filter(function(f) { return !!this.Math[f]; }, stuff.funcs),
+      stds = R.filter(function(f) { return !!g.Math[f]; }, stuff.funcs),
       funcs = R.difference(stuff.funcs, stds);
 
   var importStd = function(imports) {
@@ -162,7 +180,7 @@ var asmify = function(stuff) {
   var asmFn = new Function('stdlib', 'foreign', body);
   /* jslint evil:false */
 
-  var exec = asmFn(this, {}).exec;
+  var exec = asmFn(g, {}).exec;
 
   return function(ctx) {
     var args = vars.map(function(v) { return ctx[v]; });

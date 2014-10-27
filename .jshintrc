@@ -16,6 +16,7 @@
   "unused": true,
   "globals" : {
     /* suppress warnings for npm/browserify stuff */
+    "global": false,  // browserify equiv of window
     "__dirname": false,
     "exports": false,
     "module": false,
