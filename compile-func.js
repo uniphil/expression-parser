@@ -182,10 +182,14 @@ var asmify = function(stuff) {
 
   var exec = asmFn(g, {}).exec;
 
-  return function(ctx) {
+  var normalAPI = function(ctx) {
     var args = vars.map(function(v) { return ctx[v]; });
     return exec.apply(null, args);
   };
+
+  normalAPI.maybeFasterAPI = exec;
+
+  return normalAPI;
 };
 
 
