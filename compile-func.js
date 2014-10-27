@@ -93,7 +93,7 @@ var asmCompileAST = (function(transformers) {
         return {
           c: function powerize(args) {
             if (args.length === 1) { return args[0]; }
-            return 'pow(' + args[0] + ', ' + powerize(args.slice(1)) + ')';
+            return '+pow(' + args[0] + ', ' + powerize(args.slice(1)) + ')';
           },
           subs: node.args
         };
@@ -105,11 +105,11 @@ var asmCompileAST = (function(transformers) {
   return function asmComp(ASTNode, funcs, vars) {
     funcs = funcs || [];
     vars = vars || [];
-    if (ASTNode.type === 'name') {
+    if (ASTNode.type === 'name' && !R.contains(ASTNode.key, vars)) {
       vars.push(ASTNode.key);
-    } else if (ASTNode.type === 'func') {
+    } else if (ASTNode.type === 'func' && !R.contains(ASTNode.key, funcs)) {
       funcs.push(ASTNode.key);
-    } else if (ASTNode.type === 'operator' && ASTNode.op === 'power') {
+    } else if (ASTNode.type === 'operator' && ASTNode.op === 'power' && !R.contains('pow', funcs)) {
       // special-case grr...
       funcs.push('pow');
     }
