@@ -5,7 +5,7 @@ var parse = require('./parse');
 var transformers = {
   expr: function(node) {
     return { c: function(vals) { return '(' + vals[0] + ')'; },
-             subs: [node.expr] };
+             subs: node.children };
   },
   literal: function(node) {
     var str = '' + node.value;
@@ -21,7 +21,7 @@ var transformers = {
   },
   func: function(node) {
     return { c: function(args) { return 'symbols["' + node.key + '"]' + '(' + args[0] + ')'; },
-             subs: node.args };
+             subs: node.children };
   },
   operator: function(node) {
     if (node.op === 'power') {
@@ -31,7 +31,7 @@ var transformers = {
           if (args.length === 1) { return args[0]; }
           return 'symbols["pow"](' + args[0] + ', ' + powerize(args.slice(1)) + ')';
         },
-        subs: node.args
+        subs: node.children
       };
     }
     var symbols = {
@@ -45,7 +45,7 @@ var transformers = {
     };
     return { c: function(args) {
       return '(' + R.join(symbols[node.op], args) + ')'; },
-             subs: node.args };
+             subs: node.children };
   }
 };
 
