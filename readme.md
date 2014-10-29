@@ -30,188 +30,86 @@ undefined
 Parsing
 -------
 
-Here is the basic idea of the AST structure:
+New AST node design:
+
+```javascript
+{
+  type: 'expr',
+  template: '#',
+  children: [],
+  options: {}
+}
 ```
-' '
-{
-  type: 'expr',
-  parens: false,
-  template: ' ',
-  expr: null
-}
 
-'1'
-{
-  type: 'expr',
-  parens: false,
-  template: '#',
-  expr: {
-    type: 'literal',
-    template: '1',
-    value: 1
-  }
-}
+* `type` must be a valid node type
+* `options` contains different properties depending on the node type
 
-'a'
-{
-  type: 'expr',
-  parens: false,
-  template: '#'
-  expr: {
-    type: 'name',
-    template: 'a',
-    key: 'a'
-  }
-}
+### AST Node Types
 
-'(1)'
-{
-  type: 'expr',
-  parens: true,
-  template: '(#)'
-  expr: {
-    type: 'literal',
-    template: '1',
-    value: 1
-  }
-}
+#### `expr`
 
-'-1'
-{
-  type: 'expr',
-  parens: false,
-  template: '#',
-  expr: {
-    type: 'operator',
-    op: 'minus',
-    template: '-#',
-    args: [
-      {
-        type: 'literal',
-        template: '1',
-        value: 1
-      }
-    ]
-  }
-}
+options:
+```javascript
+{}
+```
 
-'1+1'
-{
-  type: 'expr',
-  parens: false,
-  template: '#',
-  expr: {
-    type: 'operator',
-    op: 'plus',
-    template: '#+#',
-    args: [
-      {
-        type: 'literal',
-        template: '1',
-        value: 1
-      },
-      {
-        type: 'literal',
-        template: '1',
-        value: 1
-      }
-    ]
-  }
-}
+#### `func`
 
-'1-1'
+options:
+```javascript
 {
-  type: 'expr',
-  parens: false,
-  template: '#',
-  expr: {
-    type: 'operator',
-    op: 'plus',
-    template: '##',
-    args: [
-      {
-        type: 'literal',
-        template: '1',
-        value: 1
-      },
-      {
-        type: 'operator',
-        op: 'minus',
-        template: '-#'
-        args: [
-          {
-            type: 'literal',
-            template: '1',
-            value: 1
-          }
-        ]
-      }
-    ]
-  }
+  key: 'funcName'
 }
+```
 
-'1 + 1 - 1'
-{
-  type: 'expr',
-  parens: false,
-  template: '#',
-  expr: {
-    type: 'operator',
-    op: 'plus',
-    template: '# + # #',
-    args: [
-      {
-        type: 'literal',
-        template: '1',
-        value: 1
-      },
-      {
-        type: 'literal',
-        template: '1',
-        value: 1
-      },
-      {
-        type: 'operator',
-        op: 'minus',
-        template: '- #',
-        args: [
-          {
-            type: 'literal',
-            template: '1',
-            value: 1
-          }
-        ]
-      }
-    ]
-  }
-}
+Infix functions should be normal function nodes. Here are some examples for `+` with 2 or 3 operands:
 
-'sin(t)'
+```javascript
 {
-  type: 'expr',
-  parens: false,
-  template: '#',
-  expr: {
-    type: 'func',
-    key: 'sin',
-    template: 'sin#',
-    args: [
-      {
-        type: 'expr'
-        parens: true,
-        template: '(#)',
-        expr: {
-          type: 'name',
-          template: 'a',
-          key: 'a'
-        }
-      }
-    ]
+  type: 'func',
+  template: '# + # + #',
+  children: [someNode, anotherNode, andAnother],
+  options: {
+    key: 'sum'
   }
 }
 ```
 
-The parser is not quite there yet, but close. Mostly it is missing `template` keys. It should be possible to compile the AST into an executable right now though. Here are some samples of the current output, expressions stollen from the [mojulo gallery](http://maxbittker.github.io/Mojulo/gallery.html).
+Normal functions can take multiple arguments
+```javascript
+{
+  type: 'func',
+  template: 'min(#, #)',
+  children: [someNode, anotherNode],
+  options: {
+    key: 'min'
+  }
+}
+```
+
+
+#### `name`
+
+options:
+```javascript
+{
+  key: 'varName'
+}
+```
+
+### `literal`
+
+options:
+```javascript
+{
+  value: 1
+}
+```
+
+
+### Current examples (out of date parser)
+
+Here are some samples of the current output, expressions stollen from the [mojulo gallery](http://maxbittker.github.io/Mojulo/gallery.html).
 
 
 #### x*y*time
