@@ -227,13 +227,15 @@ var pullValues = R.map(function(token) {
     return {
       type: 'name',
       template: token.value,
-      key: token.value
+      key: token.value,
+      children: []
     };
   } else if (token.type === 'literal') {
     return {
       type: 'literal',
       template: token.value,
-      value: parseFloat(token.value)
+      value: parseFloat(token.value),
+      children: []
     };
   } else {
     return token;
