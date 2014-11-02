@@ -10,7 +10,8 @@ var tokenMatches = [
 
 var chomp = function(str) {
   var matcher = R.find(R.where({ match: function(re) { return re.test(str); } }), tokenMatches);
-  var token = { type: matcher ? matcher.type : null,
+  var token = { type: 'token',
+                token: matcher ? matcher.type : null,
                 value: matcher ? str.match(matcher.match)[0] : str[0] };
   return { token: token,
            leftover: str.slice(token.value.length) };

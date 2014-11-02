@@ -10,22 +10,22 @@ describe('Lexer', function() {
 
   describe('individual symbols', function() {
     it('should detect the right type of token', function() {
-      assert.propertyVal(lex(' ')[0], 'type', 'space', 'spaces are spaces');
-      assert.propertyVal(lex('0')[0], 'type', 'literal', 'zero is a literal');
-      assert.propertyVal(lex('1.5')[0], 'type', 'literal', '1.5 is a literal');
-      assert.propertyVal(lex('a')[0], 'type', 'name', '"a" is a name');
-      assert.propertyVal(lex('+')[0], 'type', 'operator', 'plus is an operator');
-      assert.propertyVal(lex('-')[0], 'type', 'operator', 'minus is an operator');
-      assert.propertyVal(lex('%')[0], 'type', 'operator', 'mod is an operator');
-      assert.propertyVal(lex('*')[0], 'type', 'operator', 'multiply is an operator');
-      assert.propertyVal(lex('/')[0], 'type', 'operator', 'divide is an operator');
-      assert.propertyVal(lex('^')[0], 'type', 'operator', 'caret is an operator');
-      assert.propertyVal(lex('<')[0], 'type', 'operator', 'less than is an operator');
-      assert.propertyVal(lex('>')[0], 'type', 'operator', 'greater than is an operator');
-      assert.propertyVal(lex('(')[0], 'type', 'paren', 'open parenthesis is a paren');
-      assert.propertyVal(lex(')')[0], 'type', 'paren', 'close parenthesis is a paren');
-      assert.propertyVal(lex('[')[0], 'type', 'paren', 'open bracket is a paren');
-      assert.propertyVal(lex(']')[0], 'type', 'paren', 'close bracket is a paren');
+      assert.propertyVal(lex(' ')[0], 'token', 'space', 'spaces are spaces');
+      assert.propertyVal(lex('0')[0], 'token', 'literal', 'zero is a literal');
+      assert.propertyVal(lex('1.5')[0], 'token', 'literal', '1.5 is a literal');
+      assert.propertyVal(lex('a')[0], 'token', 'name', '"a" is a name');
+      assert.propertyVal(lex('+')[0], 'token', 'operator', 'plus is an operator');
+      assert.propertyVal(lex('-')[0], 'token', 'operator', 'minus is an operator');
+      assert.propertyVal(lex('%')[0], 'token', 'operator', 'mod is an operator');
+      assert.propertyVal(lex('*')[0], 'token', 'operator', 'multiply is an operator');
+      assert.propertyVal(lex('/')[0], 'token', 'operator', 'divide is an operator');
+      assert.propertyVal(lex('^')[0], 'token', 'operator', 'caret is an operator');
+      assert.propertyVal(lex('<')[0], 'token', 'operator', 'less than is an operator');
+      assert.propertyVal(lex('>')[0], 'token', 'operator', 'greater than is an operator');
+      assert.propertyVal(lex('(')[0], 'token', 'paren', 'open parenthesis is a paren');
+      assert.propertyVal(lex(')')[0], 'token', 'paren', 'close parenthesis is a paren');
+      assert.propertyVal(lex('[')[0], 'token', 'paren', 'open bracket is a paren');
+      assert.propertyVal(lex(']')[0], 'token', 'paren', 'close bracket is a paren');
     });
     it('should keep the right value', function() {
       assert.propertyVal(lex(' ')[0], 'value', ' ');
@@ -67,32 +67,57 @@ describe('Lexer', function() {
       assert.deepEqual(lex(''), [], 'empty expression -> empty list');
     });
     it('should otherswise be an array of objects', function() {
-      assert.deepEqual(lex(' '), [{type: 'space', value: ' '}]);
+      assert.deepEqual(lex(' '), [{type: 'token', token: 'space', value: ' '}]);
       assert.deepEqual(
         lex('2 + sin(t)'),
-        [{type: 'literal', value: '2'},
-         {type: 'space', value: ' '},
-         {type: 'operator', value: '+'},
-         {type: 'space', value: ' '},
-         {type: 'name', value: 'sin'},
-         {type: 'paren', value: '('},
-         {type: 'name', value: 't'},
-         {type: 'paren', value: ')'}]);
+        [{type: 'token', token: 'literal', value: '2'},
+         {type: 'token', token: 'space', value: ' '},
+         {type: 'token', token: 'operator', value: '+'},
+         {type: 'token', token: 'space', value: ' '},
+         {type: 'token', token: 'name', value: 'sin'},
+         {type: 'token', token: 'paren', value: '('},
+         {type: 'token', token: 'name', value: 't'},
+         {type: 'token', token: 'paren', value: ')'}]);
     });
   });
   describe('invalid tokens', function() {
-    it('should give 1-char tokens of type "null"', function() {
-      assert.deepEqual(lex('!'), [{type: null, value: '!'}]);
+    it('should give 1-char tokens of token: "null"', function() {
+      assert.deepEqual(lex('!'), [{type: 'token', token: null, value: '!'}]);
       assert.deepEqual(
         lex('!@&'),
-        [{type: null, value: '!'},
-         {type: null, value: '@'},
-         {type: null, value: '&'}]);
+        [{type: 'token', token: null, value: '!'},
+         {type: 'token', token: null, value: '@'},
+         {type: 'token', token: null, value: '&'}]);
       assert.deepEqual(
         lex('abc!def'),
-        [{type: 'name', value: 'abc'},
-         {type: null, value: '!'},
-         {type: 'name', value: 'def'}]);
+        [{type: 'token', token: 'name', value: 'abc'},
+         {type: 'token', token: null, value: '!'},
+         {type: 'token', token: 'name', value: 'def'}]);
+    });
+  });
+  describe('creates valid tokens', function() {
+    it('should always have type: "token"', function() {
+      assert.propertyVal(lex(' ')[0], 'type', 'token');
+      assert.propertyVal(lex('0')[0], 'type', 'token');
+      assert.propertyVal(lex('1.5')[0], 'type', 'token');
+      assert.propertyVal(lex('a')[0], 'type', 'token');
+      assert.propertyVal(lex('+')[0], 'type', 'token');
+      assert.propertyVal(lex('-')[0], 'type', 'token');
+      assert.propertyVal(lex('%')[0], 'type', 'token');
+      assert.propertyVal(lex('*')[0], 'type', 'token');
+      assert.propertyVal(lex('/')[0], 'type', 'token');
+      assert.propertyVal(lex('^')[0], 'type', 'token');
+      assert.propertyVal(lex('<')[0], 'type', 'token');
+      assert.propertyVal(lex('>')[0], 'type', 'token');
+      assert.propertyVal(lex('(')[0], 'type', 'token');
+      assert.propertyVal(lex(')')[0], 'type', 'token');
+      assert.propertyVal(lex('[')[0], 'type', 'token');
+      assert.propertyVal(lex(']')[0], 'type', 'token');
+    });
+    it('should be an array of all type:"token"', function() {
+      lex('1 + 1').map(function(token) {
+        assert.propertyVal(token, 'type', 'token');
+      });
     });
   });
 });
