@@ -66,7 +66,8 @@ var normalizeBinary = function(symbol, op, becomes, ident) {
             children: [{
               type: 'literal',
               template: '' + ident,
-              value: ident
+              value: ident,
+              children: []
             }, tokenAfter]
           }]
         });
@@ -298,7 +299,8 @@ var pullUnaryMinus = function(tokens) {
           op: 'minus',
           children: [{
             type: 'literal',
-            value: 0
+            value: 0,
+            children: []
           }, argToken]
         });
       } else {

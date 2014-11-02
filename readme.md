@@ -34,6 +34,7 @@ New AST node design:
 
 ```javascript
 {
+  id: 0,
   type: 'expr',
   template: '#',
   children: [],
@@ -41,6 +42,7 @@ New AST node design:
 }
 ```
 
+* `id` must be unique
 * `type` must be a valid node type
 * `options` contains different properties depending on the node type
 
@@ -66,6 +68,7 @@ Infix functions should be normal function nodes. Here are some examples for `+` 
 
 ```javascript
 {
+  id: 0,
   type: 'func',
   template: '# + # + #',
   children: [someNode, anotherNode, andAnother],
@@ -78,6 +81,7 @@ Infix functions should be normal function nodes. Here are some examples for `+` 
 Normal functions can take multiple arguments
 ```javascript
 {
+  id: 0,
   type: 'func',
   template: 'min(#, #)',
   children: [someNode, anotherNode],
