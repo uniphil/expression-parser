@@ -43,6 +43,7 @@ New AST node design:
 }
 ```
 
+* `id` must be unique
 * `type` must be a valid node type
 * `options` contains different properties depending on the node type
 

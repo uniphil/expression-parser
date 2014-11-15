@@ -60,13 +60,14 @@ var normalizeBinary = function(symbol, op, becomes, ident) {
           type: 'operator',
           op: becomes,
           normalized: becomes,
-          args: [{
+          children: [{
             type: 'operator',
             op: op,
-            args: [{
+            children: [{
               type: 'literal',
               template: '' + ident,
-              value: ident
+              value: ident,
+              children: []
             }, tokenAfter]
           }]
         });
@@ -95,20 +96,20 @@ var pullBinary = function(symbol, op) {
       var lastOut = outputTokens[outputTokens.length - 1];
       if (token.type === 'operator' && token.value === symbol) {
         if (lastOut && lastOut.type === 'operator' && lastOut.op === op) {
-          lastOut.args.push(tokens[i + 1]);
+          lastOut.children.push(tokens[i + 1]);
           i++;
         } else {
           var outputToken = {
             type: 'operator',
             op: op,
-            args: [prevToken]
+            children: [prevToken]
           };
           if (nextToken.type === 'operator' && nextToken.op === op) {
-            var merging = nextToken.args;
-            Array.prototype.push.apply(outputToken.args, merging);
+            var merging = nextToken.children;
+            Array.prototype.push.apply(outputToken.children, merging);
             i += merging.length;
           } else {
-            outputToken.args.push(nextToken);
+            outputToken.children.push(nextToken);
             i++;
           }
           outputTokens.push(outputToken);
@@ -117,17 +118,17 @@ var pullBinary = function(symbol, op) {
         if (prevToken && !(prevToken.type === 'operator' &&
             (prevToken.op === op || prevToken.value === symbol))) {
           if (lastOut) {
-            Array.prototype.push.apply(lastOut.args, token.args);
+            Array.prototype.push.apply(lastOut.children, token.children);
           } else {
-            token.args.unshift(prevToken);
+            token.children.unshift(prevToken);
             outputTokens.push(token);
           }
         } else {
           outputTokens.push(token);
         }
         if (nextToken && nextToken.type === 'operator' && nextToken.op === op) {
-          Array.prototype.push.apply(token.args, nextToken.args);
-          i += nextToken.args.length;
+          Array.prototype.push.apply(token.children, nextToken.children);
+          i += nextToken.children.length;
         }
       } else {
         if (!(nextToken && nextToken.type === 'operator' &&
@@ -192,7 +193,7 @@ var pullFunctions = function(tokens) {
         type: 'func',
         key: token.value,
         template: token.value + '#',
-        args: [nextToken]
+        children: [nextToken]
       });
       i++;
     } else {
@@ -227,13 +228,15 @@ var pullValues = R.map(function(token) {
     return {
       type: 'name',
       template: token.value,
-      key: token.value
+      key: token.value,
+      children: []
     };
   } else if (token.type === 'literal') {
     return {
       type: 'literal',
       template: token.value,
-      value: parseFloat(token.value)
+      value: parseFloat(token.value),
+      children: []
     };
   } else {
     return token;
@@ -294,9 +297,10 @@ var pullUnaryMinus = function(tokens) {
         outputTokens.unshift({
           type: 'operator',
           op: 'minus',
-          args: [{
+          children: [{
             type: 'literal',
-            value: 0
+            value: 0,
+            children: []
           }, argToken]
         });
       } else {
@@ -339,7 +343,7 @@ var wrapExpr = function(tokens) {
   }
   return {
     type: 'expr',
-    expr: tokens[0]
+    children: tokens
   };
 };
 

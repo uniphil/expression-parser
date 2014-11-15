@@ -135,22 +135,22 @@ describe('Parser', function() {
   });
   describe('simple cases', function() {
     it('should parse a simple literal value', function() {
-      assert.equal(parse('1').expr.type, 'literal');
+      assert.equal(parse('1').children[0].type, 'literal');
     });
     it('should parse a simple name', function() {
-      assert.equal(parse('a').expr.type, 'name');
+      assert.equal(parse('a').children[0].type, 'name');
     });
     it('should parse a function call', function() {
-      assert.equal(parse('f(x)').expr.type, 'func');
+      assert.equal(parse('f(x)').children[0].type, 'func');
     });
     it('should parse operators', function() {
-      assert.equal(parse('-1').expr.type, 'operator');
-      assert.equal(parse('1-2').expr.type, 'operator');
-      assert.equal(parse('1+2').expr.type, 'operator');
-      assert.equal(parse('1%2').expr.type, 'operator');
-      assert.equal(parse('1*2').expr.type, 'operator');
-      assert.equal(parse('1/2').expr.type, 'operator');
-      assert.equal(parse('1^2').expr.type, 'operator');
+      assert.equal(parse('-1').children[0].type, 'operator');
+      assert.equal(parse('1-2').children[0].type, 'operator');
+      assert.equal(parse('1+2').children[0].type, 'operator');
+      assert.equal(parse('1%2').children[0].type, 'operator');
+      assert.equal(parse('1*2').children[0].type, 'operator');
+      assert.equal(parse('1/2').children[0].type, 'operator');
+      assert.equal(parse('1^2').children[0].type, 'operator');
     });
     it('should puke on invalid operators', function() {
       assert.throws(function() { parse('$'); }, parse.ParseError);
@@ -164,12 +164,12 @@ describe('Parser', function() {
       assert.throws(function() { parse('())'); }, parse.ParseError);
     });
     it('should parse contents as a subexpression', function() {
-      assert.equal(parse('(1)').expr.type, 'expr');
-      assert.equal(parse('(1)').expr.expr.type, 'literal');
+      assert.equal(parse('(1)').children[0].type, 'expr');
+      assert.equal(parse('(1)').children[0].children[0].type, 'literal');
     });
     it('should treat function expressions as subexpressions', function() {
-      assert.equal(parse('sin(t)').expr.type, 'func');
-      assert.equal(parse('sin(t)').expr.args[0].type, 'expr');
+      assert.equal(parse('sin(t)').children[0].type, 'func');
+      assert.equal(parse('sin(t)').children[0].children[0].type, 'expr');
     });
   });
   describe('operators', function() {
@@ -182,26 +182,26 @@ describe('Parser', function() {
   });
   describe('plus', function() {
     it('should turn unary + into a noop', function() {
-      assert.equal(parse('+1').expr.type, 'literal');
-      assert.equal(parse('++1').expr.type, 'literal');
+      assert.equal(parse('+1').children[0].type, 'literal');
+      assert.equal(parse('++1').children[0].type, 'literal');
     });
     it('should pull minus into plus unary-minus', function() {
-      assert.equal(parse('1-2').expr.op, 'plus');
-      assert.equal(parse('1-2').expr.args[1].type, 'operator');
+      assert.equal(parse('1-2').children[0].op, 'plus');
+      assert.equal(parse('1-2').children[0].children[1].type, 'operator');
     });
     it('should pull unary minuses together', function() {
-      assert.equal(parse('-1').expr.op, 'minus', '-1');
-      assert.equal(parse('--1').expr.op, 'minus', '--1');
-      assert.equal(parse('--1').expr.args[1].op, 'minus', '--1');
-      assert.equal(parse('1--2').expr.op, 'plus', '1--2');
-      assert.equal(parse('1--2').expr.args[1].op, 'minus', '1--2');
+      assert.equal(parse('-1').children[0].op, 'minus', '-1');
+      assert.equal(parse('--1').children[0].op, 'minus', '--1');
+      assert.equal(parse('--1').children[0].children[1].op, 'minus', '--1');
+      assert.equal(parse('1--2').children[0].op, 'plus', '1--2');
+      assert.equal(parse('1--2').children[0].children[1].op, 'minus', '1--2');
     });
     it('should group plusses', function() {
-      assert.equal(parse('1+2+3').expr.args.length, 3);
-      assert.equal(parse('1+2-3').expr.args.length, 3);
-      assert.equal(parse('1-2+3').expr.args.length, 3);
-      assert.equal(parse('1-2-3').expr.args.length, 3);
-      assert.equal(parse('1-2-3').expr.op, 'plus');
+      assert.equal(parse('1+2+3').children[0].children.length, 3);
+      assert.equal(parse('1+2-3').children[0].children.length, 3);
+      assert.equal(parse('1-2+3').children[0].children.length, 3);
+      assert.equal(parse('1-2-3').children[0].children.length, 3);
+      assert.equal(parse('1-2-3').children[0].op, 'plus');
     });
   });
   describe('regressions', function() {
