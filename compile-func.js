@@ -8,7 +8,7 @@ var transformers = {
              subs: node.children };
   },
   literal: function(node) {
-    var str = '' + node.value;
+    var str = '' + node.options.value;
     if (!R.contains('.', str)) {
       str += '.0';
     }
@@ -16,42 +16,59 @@ var transformers = {
              subs: [] };
   },
   name: function(node) {
-    return { c: function() { return 'symbols["' + node.key + '"]'; },
-             subs: [] };
+    var key = node.options.key;
+    if (R.prop(key, Math)) {
+      return {
+        c: function() {
+          return 'Math.' + key;
+        },
+        subs: []
+      };
+    }
+    return {
+      c: function() {
+        return 'symbols["' + key + '"]';
+      },
+      subs: []
+    };
   },
   func: function(node) {
-    return { c: function(args) { return 'symbols["' + node.key + '"]' + '(' + args[0] + ')'; },
-             subs: node.children };
-  },
-  operator: function(node) {
-    if (node.op === 'power') {
-      // special case grr
+    var key = node.options.key;
+    var narys = {
+      product: '*',
+      div: '/',
+      mod: '%',
+      sum: '+',
+      minus: '-',
+      lessThan: '<',
+      greaterThan: '>'
+    };
+    if (narys[key]) {
       return {
-        c: function powerize(args) {
-          if (args.length === 1) { return args[0]; }
-          return 'symbols["pow"](' + args[0] + ', ' + powerize(args.slice(1)) + ')';
-        },
+        c: function(args) { return '(' + args.join(narys[key]) + ')'; },
         subs: node.children
       };
     }
-    var symbols = {
-      times: '*',
-      over: '/',
-      mod: '%',
-      plus: '+',
-      minus: '-',
-      less: '<',
-      greater: '>'
-    };
-    return { c: function(args) {
-      return '(' + R.join(symbols[node.op], args) + ')'; },
-             subs: node.children };
+    if (key === 'neg') {
+      return {
+        c: function(args) { return '(-' + args[0] + ')'; },
+        subs: node.children
+      };
+    }
+    if (R.prop(key, Math)) {
+      return {
+        c: function(args) { return 'Math.' + key + '(' + args.join(',') + ')'; },
+        subs: node.children
+      };
+    }
+    return { c: function(args) { return 'symbols["' + node.options.key + '"]' +
+      '(' + args.join(',') + ')'; }, subs: node.children };
   }
 };
 
 
 var compileAST = function comp(ASTNode) {
-  var transformer = transformers[ASTNode.type](ASTNode);
+  var transformer = transformers[ASTNode.node](ASTNode);
   return transformer.c(R.map(comp, transformer.subs));
 };
 
@@ -78,7 +95,6 @@ var compile = R.pipe(
   compileAST,
   functionify
 );
-
 
 compile.compileAST = compileAST;
 

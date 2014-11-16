@@ -135,22 +135,22 @@ describe('Parser', function() {
   });
   describe('simple cases', function() {
     it('should parse a simple literal value', function() {
-      assert.equal(parse('1').children[0].type, 'literal');
+      assert.equal(parse('1').children[0].node, 'literal');
     });
     it('should parse a simple name', function() {
-      assert.equal(parse('a').children[0].type, 'name');
+      assert.equal(parse('a').children[0].node, 'name');
     });
     it('should parse a function call', function() {
-      assert.equal(parse('f(x)').children[0].type, 'func');
+      assert.equal(parse('f(x)').children[0].node, 'func');
     });
     it('should parse operators', function() {
-      assert.equal(parse('-1').children[0].type, 'operator');
-      assert.equal(parse('1-2').children[0].type, 'operator');
-      assert.equal(parse('1+2').children[0].type, 'operator');
-      assert.equal(parse('1%2').children[0].type, 'operator');
-      assert.equal(parse('1*2').children[0].type, 'operator');
-      assert.equal(parse('1/2').children[0].type, 'operator');
-      assert.equal(parse('1^2').children[0].type, 'operator');
+      assert.equal(parse('-1').children[0].node, 'func');
+      assert.equal(parse('1-2').children[0].node, 'func');
+      assert.equal(parse('1+2').children[0].node, 'func');
+      assert.equal(parse('1%2').children[0].node, 'func');
+      assert.equal(parse('1*2').children[0].node, 'func');
+      assert.equal(parse('1/2').children[0].node, 'func');
+      assert.equal(parse('1^2').children[0].node, 'func');
     });
     it('should puke on invalid operators', function() {
       assert.throws(function() { parse('$'); }, parse.ParseError);
@@ -164,12 +164,12 @@ describe('Parser', function() {
       assert.throws(function() { parse('())'); }, parse.ParseError);
     });
     it('should parse contents as a subexpression', function() {
-      assert.equal(parse('(1)').children[0].type, 'expr');
-      assert.equal(parse('(1)').children[0].children[0].type, 'literal');
+      assert.equal(parse('(1)').children[0].node, 'expr');
+      assert.equal(parse('(1)').children[0].children[0].node, 'literal');
     });
-    it('should treat function expressions as subexpressions', function() {
-      assert.equal(parse('sin(t)').children[0].type, 'func');
-      assert.equal(parse('sin(t)').children[0].children[0].type, 'expr');
+    it('should put function expressions as children', function() {
+      assert.equal(parse('sin(t)').children[0].node, 'func');
+      assert.equal(parse('sin(t)').children[0].children[0].node, 'name');
     });
   });
   describe('operators', function() {
@@ -177,27 +177,26 @@ describe('Parser', function() {
       assert.throws(function() { parse('1+'); }, parse.ParseError);
     });
     it('should error for leading non-unary operators', function() {
-      assert.throws(function() { parse('/1'); }, parse.ParseError);
+      assert.throws(function() { parse('*1'); }, parse.ParseError);
     });
   });
   describe('plus', function() {
-    it('should turn unary + into a noop', function() {
-      assert.equal(parse('+1').children[0].type, 'literal');
-      assert.equal(parse('++1').children[0].type, 'literal');
-    });
     it('should pull minus into plus unary-minus', function() {
       assert.equal(parse('1-2').children[0].op, 'plus');
       assert.equal(parse('1-2').children[0].children[1].type, 'operator');
     });
     it('should pull unary minuses together', function() {
-      assert.equal(parse('-1').children[0].op, 'minus', '-1');
-      assert.equal(parse('--1').children[0].op, 'minus', '--1');
-      assert.equal(parse('--1').children[0].children[1].op, 'minus', '--1');
+      assert.equal(parse('-1').children[0].node, 'func');
+      assert.equal(parse('--1').children[0].node, 'func');
+      assert.equal(parse('--1').children[0].children[0].node, 'func');
       assert.equal(parse('1--2').children[0].op, 'plus', '1--2');
       assert.equal(parse('1--2').children[0].children[1].op, 'minus', '1--2');
     });
     it('should group plusses', function() {
       assert.equal(parse('1+2+3').children[0].children.length, 3);
+      assert.equal(parse('1+2+3').children[0].children[0].options.value, 1);
+      assert.equal(parse('1+2+3').children[0].children[1].options.value, 2);
+      assert.equal(parse('1+2+3').children[0].children[2].options.value, 3);
       assert.equal(parse('1+2-3').children[0].children.length, 3);
       assert.equal(parse('1-2+3').children[0].children.length, 3);
       assert.equal(parse('1-2-3').children[0].children.length, 3);
@@ -286,12 +285,13 @@ describe('Function compiler', function() {
   describe('sample expressions', function() {
     it('should work', function() {
       var eps = 0.00001;  // TODO: pick a non-arbitrary acceptable error
-      assert.equal(compileF('1+2*3^4')(Math), 163);
+      assert.equal(compileF('1+2*3^4/5')(), 33.4);
       assert.equal(compileF('1>2')(), 0);
       assert.equal(compileF('1>0')(), 1);
       assert.equal(compileF('3%2')(), 1);
-      assert.closeTo(compileF('sin(PI)')(Math), 0, eps);
-      assert.closeTo(compileF('cos(PI)')(Math), -1, eps);
+      assert.equal(compileF('PI')(), Math.PI);
+      assert.closeTo(compileF('sin(PI)')(), 0, eps);
+      assert.closeTo(compileF('cos(PI)')(), -1, eps);
     });
   });
 });

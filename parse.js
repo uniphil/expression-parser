@@ -13,7 +13,21 @@ function ParseError(message) {
 }
 
 
-var parseTokens;  // declared because we recurse to it
+var parseTokens;  // implemented later; declared here because we recurse to it
+
+
+var astNode = function(nodeType, children, options) {
+  children = children || [];
+  options = options || {};
+  return {
+    id: options.id || undefined,
+    type: 'ASTNode',
+    node: nodeType,
+    // template: options.template || '#',
+    children: children,
+    options: options
+  };
+};
 
 
 var parenDepthMod = function(token) {
@@ -38,112 +52,59 @@ var validateParens = function(tokens) {
   return tokens;
 };
 
-
-var normalizeBinary = function(symbol, op, becomes, ident) {
-  return function(tokens) {
-    // [a, symbol, b] => [a, becomes, (op, b)]
-    // obvious unaries have already been pulled
-    var outputTokens = [],
-        token,
-        tokenBefore,
-        tokenAfter;
-    for (var i = 0; i < tokens.length; i++) {
-      tokenBefore = tokens[i - 1];
-      tokenAfter = tokens[i + 1];
-      token = tokens[i];
-      if (token.type === 'operator' && token.value === symbol) {
-        var lastOut = outputTokens[outputTokens.length - 1];
-        if (!lastOut || R.prop('normalized', lastOut) !== becomes) {
-          outputTokens.push(tokenBefore);
-        }
-        outputTokens.push({
-          type: 'operator',
-          op: becomes,
-          normalized: becomes,
-          children: [{
-            type: 'operator',
-            op: op,
-            children: [{
-              type: 'literal',
-              template: '' + ident,
-              value: ident,
-              children: []
-            }, tokenAfter]
-          }]
-        });
-        i++;
-      } else {
-        if (!(tokenAfter && tokenAfter.type === 'operator' && tokenAfter.value === symbol)) {
-          outputTokens.push(token);
-        }
+function pullOperator(symbol, ary, funcName) {
+  var arys = {
+    unary: function(tL, t, tR) {
+      return [[tL, astNode('func', [tR], {key: funcName})], null];
+    },
+    binary: function(tL, t, tR) {
+      return [[astNode('func', [tL, tR], {key: funcName})], null];
+    },
+    nary: function(tL, t, tR) {
+      if (tR.type === 'ASTNode' && tR.node === 'func' && tR.options.key === funcName) {
+        tR.children.unshift(tL);
+        return [[tR], null];
       }
+      return arys.binary(tL, t, tR);
     }
-    return outputTokens;
   };
-};
 
+  return function(tL, t, tR) {
+    if (t.type === 'token' && t.token === 'operator' && t.value === symbol) {
+      return arys[ary](tL, t, tR);
+    }
+    return [[tL, t], tR];
+  };
+}
 
-var pullBinary = function(symbol, op) {
+function pullOps(opName, ary, funcName, preOp) {
+  var puller = pullOperator(opName, ary, funcName, preOp);
+
   return function(tokens) {
-    var outputTokens = [],
-        prevToken,
-        token,
-        nextToken;
-    for (var i = 0; i < tokens.length; i++) {
-      prevToken = tokens[i - 1];
-      nextToken = tokens[i + 1];
-      token = tokens[i];
-      var lastOut = outputTokens[outputTokens.length - 1];
-      if (token.type === 'operator' && token.value === symbol) {
-        if (lastOut && lastOut.type === 'operator' && lastOut.op === op) {
-          lastOut.children.push(tokens[i + 1]);
-          i++;
-        } else {
-          var outputToken = {
-            type: 'operator',
-            op: op,
-            children: [prevToken]
-          };
-          if (nextToken.type === 'operator' && nextToken.op === op) {
-            var merging = nextToken.children;
-            Array.prototype.push.apply(outputToken.children, merging);
-            i += merging.length;
-          } else {
-            outputToken.children.push(nextToken);
-            i++;
-          }
-          outputTokens.push(outputToken);
-        }
-      } else if (token.type === 'operator' && token.op === op) {
-        if (prevToken && !(prevToken.type === 'operator' &&
-            (prevToken.op === op || prevToken.value === symbol))) {
-          if (lastOut) {
-            Array.prototype.push.apply(lastOut.children, token.children);
-          } else {
-            token.children.unshift(prevToken);
-            outputTokens.push(token);
-          }
-        } else {
-          outputTokens.push(token);
-        }
-        if (nextToken && nextToken.type === 'operator' && nextToken.op === op) {
-          Array.prototype.push.apply(token.children, nextToken.children);
-          i += nextToken.children.length;
-        }
-      } else {
-        if (!(nextToken && nextToken.type === 'operator' &&
-              (nextToken.value === symbol || nextToken.op === op))) {
-          outputTokens.push(token);
-        }
+    var pulled,
+        output = [],
+        tR = tokens.pop(),
+        t = tokens.pop(),
+        tL = tokens.pop();
+    while (true) {
+      if (!t) {
+        output.unshift(tR);
+        break;
       }
+      pulled = puller(tL, t, tR);
+      if (pulled[1] !== null) {
+        output.unshift(pulled[1]);
+      }
+      tR = pulled[0].pop();
+      t = pulled[0].pop() || tokens.pop();
+      tL = tokens.pop();
     }
-    return outputTokens;
+    return output;
   };
-};
+}
 
 
 var pullSubExpressions = function(tokens) {
-
   var token,
       parenDepth = 0,
       subExprTokens,
@@ -153,14 +114,14 @@ var pullSubExpressions = function(tokens) {
   for (var i = 0; i < tokens.length; i++) {
     token = tokens[i];
     if (parenDepth === 0) {
-      if (token.type === 'paren') {
+      if (token.token === 'paren') {
         parenDepth += 1;
         subExprTokens = [];
       } else {
         outputTokens.push(token);
       }
     } else {
-      if (token.type === 'paren') {
+      if (token.token === 'paren') {
         parenDepth += parenDepthMod(token);
         if (parenDepth === 0) {
           subAST = parseTokens(subExprTokens);
@@ -178,29 +139,24 @@ var pullSubExpressions = function(tokens) {
 
 
 var pullFunctions = function(tokens) {
-  // find [name, expr]s, and swap name->fn(subexpr)
+  // find [name, expr]s, and swap as fn(key=name, children=expr.children)
   if (tokens.length < 2) {
     return tokens;  // there cannot be any functions
   }
   var outputTokens = [],
       token,
-      nextToken;
-  for (var i = 1; i < tokens.length; i++) {
-    token = tokens[i - 1];
-    nextToken = tokens[i];
-    if (token.type === 'name' && nextToken.type === 'expr') {
-      outputTokens.push({
-        type: 'func',
-        key: token.value,
-        template: token.value + '#',
-        children: [nextToken]
-      });
-      i++;
+      exprNode;
+  for (var i = 0; i < tokens.length - 1; i++) {
+    token = tokens[i];
+    exprNode = tokens[i + 1];
+    if (token.token === 'name' && exprNode.node === 'expr') {
+      outputTokens.push(astNode('func', exprNode.children, {key: token.value}));
+      i++;  // skip over the expr token
     } else {
       outputTokens.push(token);
     }
   }
-  if (outputTokens[outputTokens.length - 1].type !== 'func') {
+  if (outputTokens[outputTokens.length - 1].node !== 'func') {
     // if the last thing isn't a function's expression, we still want it
     outputTokens.push(tokens[tokens.length - 1]);
   }
@@ -210,142 +166,51 @@ var pullFunctions = function(tokens) {
 
 var validateHasValue = function(tokens) {
   var hasValue = R.reduce(function(foundValue, token) {
-    if (R.contains(token.type, ['literal', 'name', 'expr'])) {
+    if (R.contains(token.token, ['literal', 'name']) || token.node === 'expr') {
       return true;
     } else {
       return foundValue;
     }
   }, false);
   if (!hasValue(tokens)) {
-    throw new ParseError('Expression has no value');
+    throw new ParseError('Expression has no value ' + JSON.stringify(tokens));
   }
   return tokens;
 };
 
 
 var pullValues = R.map(function(token) {
-  if (token.type === 'name') {
-    return {
-      type: 'name',
-      template: token.value,
-      key: token.value,
-      children: []
-    };
-  } else if (token.type === 'literal') {
-    return {
-      type: 'literal',
-      template: token.value,
-      value: parseFloat(token.value),
-      children: []
-    };
-  } else {
-    return token;
+  if (token.type === 'token') {
+    if (token.token === 'name') {
+      return astNode('name', [], { key: token.value });
+    } else if (token.token === 'literal') {
+      return astNode('literal', [], { value: parseFloat(token.value) });
+    }
   }
+  return token;
 });
 
 
 var validateOperators = function(tokens) {
   var first = tokens[0],
       last = tokens[tokens.length - 1];
-  if (first.type === 'operator' && !R.contains(first.value, '+-')) {
+  if (first.token === 'operator' && first.value !== '-') {
     throw new ParseError('non-unary leading operator: ' + first.value);
   }
-  if (last.type === 'operator') {
+  if (last.token === 'operator') {
     throw new ParseError('trailing operator: ' + last.value);
   }
   return tokens;
 };
 
-var simplifyUnaryPlus = function(tokens) {
-  // simlify to just its thing
-  // TODO: keep it as part of the token's format string
-  var token,
-      tokenBefore,
-      outputTokens = [];
-  for (var i = tokens.length - 1; i >= 0; i--) {
-    tokenBefore = tokens[i - 1];
-    token = tokens[i];
-    if (token.type === 'operator' && token.value === '+') {
-      if (tokenBefore && tokenBefore.type !== 'operator') {
-        outputTokens.unshift(token);
-      }
-    } else {
-      outputTokens.unshift(token);
-    }
+
+var validateOneValue = function(n) {
+  if (n.children.length !== 1) {
+    throw new ParseError('The expression must resolve to exactly one value');
   }
-  return outputTokens;
+  return n;
 };
 
-var pullUnaryMinus = function(tokens) {
-  var outputTokens = [],
-      token,
-      prevToken,
-      nextToken;
-  for (var i = tokens.length - 1; i >= 0; i--) {
-    token = tokens[i];
-    prevToken = tokens[i - 1];
-    nextToken = tokens[i + 1];
-    if (token.type === 'operator' && token.value === '-') {
-      if (!prevToken || prevToken.type === 'operator' && prevToken.op !== 'power') {
-        var prevOut = outputTokens[0],
-            argToken;
-        if (prevOut && prevOut.type === 'operator' && prevOut.op === 'minus') {
-          argToken = outputTokens.shift();
-        } else {
-          argToken = nextToken;
-        }
-        outputTokens.unshift({
-          type: 'operator',
-          op: 'minus',
-          children: [{
-            type: 'literal',
-            value: 0,
-            children: []
-          }, argToken]
-        });
-      } else {
-        if (!(nextToken && nextToken.type === 'operator' && nextToken.value === '-')) {
-          outputTokens.unshift(nextToken);  // we skipped it because we saw - coming
-        }
-        outputTokens.unshift(token);
-      }
-    } else {
-      if (!(prevToken && prevToken.type === 'operator' && prevToken.value === '-')) {
-        outputTokens.unshift(token);
-      } // else skip -- minus coming next
-    }
-  }
-  return outputTokens;
-};
-
-
-var pullPowers = pullBinary('^', 'power');
-
-var fixDivisons = normalizeBinary('/', 'over', 'times', 1);
-
-var pullTimes = pullBinary('*', 'times');
-
-var pullMod = pullBinary('%', 'mod');
-
-var fixBinaryMinus = normalizeBinary('-', 'minus', 'plus', 0);
-
-var pullPlus = pullBinary('+', 'plus');
-
-var pullLT = pullBinary('<', 'less');
-
-var pullGT = pullBinary('>', 'greater');
-
-
-var wrapExpr = function(tokens) {
-  if (tokens.length > 1) {
-    console.error('wrapping', JSON.stringify(tokens, null, 2));
-    throw new ParseError('err.. ??? could not wrap more than one ast node in expr');
-  }
-  return {
-    type: 'expr',
-    children: tokens
-  };
-};
 
 parseTokens = R.pipe(
   pullSubExpressions,
@@ -353,28 +218,27 @@ parseTokens = R.pipe(
   pullFunctions,
   pullValues,
   validateOperators,
-  simplifyUnaryPlus,
-  pullPowers,
-  pullUnaryMinus,
-  fixDivisons,
-  pullTimes,
-  pullMod,
-  fixBinaryMinus,
-  pullPlus,
-  pullLT,
-  pullGT,
-  wrapExpr
+  pullOps('^', 'binary', 'pow'),
+  pullOps('-', 'unary', 'neg'),
+  pullOps('*', 'nary', 'product'),
+  pullOps('/', 'binary', 'div'),
+  pullOps('%', 'binary', 'mod'),
+  pullOps('+', 'nary', 'sum'),
+  pullOps('<', 'binary', 'lessThan'),
+  pullOps('>', 'binary', 'greaterThan'),
+  R.curryN(2, astNode)('expr')
 );
 
 var parse = R.pipe(
   lex,
   validateParens,
-  parseTokens
+  parseTokens,
+  validateOneValue
 );
 
 
 parse.ParseError = ParseError;
-
+parse.astNode = astNode;
 parse.lex = lex;
 parse.parseTokens = parseTokens;
 

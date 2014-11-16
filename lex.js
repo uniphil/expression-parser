@@ -8,13 +8,22 @@ var tokenMatches = [
   { type: 'operator', match: /^[\+\-%\*\/\^<>]/ }
 ];
 
+
+var mkToken = function(token, value) {
+  return {
+    type: 'token',
+    token: token,
+    value: value
+  };
+};
+
+
 var chomp = function(str) {
   var matcher = R.find(R.where({ match: function(re) { return re.test(str); } }), tokenMatches);
-  var token = { type: 'token',
-                token: matcher ? matcher.type : null,
-                value: matcher ? str.match(matcher.match)[0] : str[0] };
-  return { token: token,
-           leftover: str.slice(token.value.length) };
+  var token = matcher ?
+    mkToken(matcher.type, str.match(matcher.match)[0]) :
+    mkToken(null, str[0]);
+  return { token: token, leftover: str.slice(token.value.length) };
 };
 
 
@@ -27,5 +36,7 @@ var chompReduce = function(str) {
   return reducer([], str);
 };
 
+
+chompReduce.token = mkToken;
 
 module.exports = chompReduce;
