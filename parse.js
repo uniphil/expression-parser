@@ -52,7 +52,7 @@ var validateParens = function(tokens) {
   return tokens;
 };
 
-function pullOperator(symbol, ary, funcName) {
+var pullOperator = function(symbol, ary, funcName) {
   var arys = {
     unary: function(tL, t, tR) {
       return [[tL, astNode('func', [tR], {key: funcName})], null];
@@ -75,9 +75,9 @@ function pullOperator(symbol, ary, funcName) {
     }
     return [[tL, t], tR];
   };
-}
+};
 
-function pullOps(opName, ary, funcName, preOp) {
+var pullOps = function(opName, ary, funcName, preOp) {
   var puller = pullOperator(opName, ary, funcName, preOp);
 
   return function(tokens) {
@@ -101,7 +101,22 @@ function pullOps(opName, ary, funcName, preOp) {
     }
     return output;
   };
-}
+};
+
+
+var injectToken = function(tokenToInject, options) {
+  return function(tokens) {
+    return R.reduce.idx(function(out, token, i, tokens) {
+      if (token.type === 'ASTNode' && token.node === 'func' &&
+          token.options.key === options.beforeOpNode &&
+          tokens[i - 1]) {
+        out.push(lex.token('operator', tokenToInject));
+      }
+      out.push(token);
+      return out;
+    }, [], tokens);
+  };
+};
 
 
 var pullSubExpressions = function(tokens) {
@@ -204,11 +219,11 @@ var validateOperators = function(tokens) {
 };
 
 
-var validateOneValue = function(n) {
-  if (n.children.length !== 1) {
+var validateOneValue = function(nodes) {
+  if (nodes.children.length !== 1) {
     throw new ParseError('The expression must resolve to exactly one value');
   }
-  return n;
+  return nodes;
 };
 
 
@@ -220,6 +235,7 @@ parseTokens = R.pipe(
   validateOperators,
   pullOps('^', 'binary', 'pow'),
   pullOps('-', 'unary', 'neg'),
+  injectToken('+', {beforeOpNode: 'neg'}),
   pullOps('*', 'nary', 'product'),
   pullOps('/', 'binary', 'div'),
   pullOps('%', 'binary', 'mod'),

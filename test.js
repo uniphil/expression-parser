@@ -182,15 +182,15 @@ describe('Parser', function() {
   });
   describe('plus', function() {
     it('should pull minus into plus unary-minus', function() {
-      assert.equal(parse('1-2').children[0].op, 'plus');
-      assert.equal(parse('1-2').children[0].children[1].type, 'operator');
+      assert.equal(parse('1-2').children[0].node, 'func');
+      assert.equal(parse('1-2').children[0].children[1].node, 'func');
     });
     it('should pull unary minuses together', function() {
       assert.equal(parse('-1').children[0].node, 'func');
       assert.equal(parse('--1').children[0].node, 'func');
       assert.equal(parse('--1').children[0].children[0].node, 'func');
-      assert.equal(parse('1--2').children[0].op, 'plus', '1--2');
-      assert.equal(parse('1--2').children[0].children[1].op, 'minus', '1--2');
+      assert.equal(parse('1--2').children[0].node, 'func');
+      assert.equal(parse('1--2').children[0].children[1].node, 'func');
     });
     it('should group plusses', function() {
       assert.equal(parse('1+2+3').children[0].children.length, 3);
@@ -200,7 +200,7 @@ describe('Parser', function() {
       assert.equal(parse('1+2-3').children[0].children.length, 3);
       assert.equal(parse('1-2+3').children[0].children.length, 3);
       assert.equal(parse('1-2-3').children[0].children.length, 3);
-      assert.equal(parse('1-2-3').children[0].op, 'plus');
+      assert.equal(parse('1-2-3').children[0].options.key, 'sum');
     });
   });
   describe('regressions', function() {
