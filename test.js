@@ -155,6 +155,9 @@ describe('Parser', function() {
     it('should puke on invalid operators', function() {
       assert.throws(function() { parse('$'); }, parse.ParseError);
     });
+    it('should not die on whitespace', function() {
+      assert.doesNotThrow(function() { parse(' 1'); }, parse.ParseError);
+    });
   });
   describe('parens', function() {
     it('should complain about mismatched parens', function() {
