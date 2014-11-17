@@ -215,6 +215,12 @@ describe('Parser', function() {
     it('should work for 1--2', function() {
       assert.doesNotThrow(function() { parse('1--2'); }, parse.ParseError);
     });
+    it('should error on dangling close paren', function() {
+      assert.throws(function() { parse('1)'); }, parse.ParseError);
+    });
+    it('should error on dangling open paren', function() {
+      assert.throws(function() { parse('1('); }, parse.ParseError);
+    });
     it('should work on some samples from the mojulo gallery', function() {
       assert.doesNotThrow(function() {
         parse('x*y*time');
