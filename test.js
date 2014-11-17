@@ -3,6 +3,7 @@ var assert = require('chai').assert;
 
 var parse = require('./parse');
 var compileF = require('./compile-func');
+var compileE = require('./compile-echo');
 
 
 describe('Lexer', function() {
@@ -252,6 +253,49 @@ describe('Parser', function() {
               'time/2)))+(1/3)*sin(3*(y-50)/(4+sin(time/2)))+(1/5)*sin(5*(y-5' +
               '0)/(4+sin(time/2))))');
       }, parse.ParseError);
+    });
+  });
+});
+
+
+describe('Echo compiler', function() {
+  describe('on simple minimal-node ASTs', function() {
+    it('should work for literals', function() {
+      assert.equal(compileE('1'), '1');
+    });
+    it('should work for names', function() {
+      assert.equal(compileE('a'), 'a');
+    });
+    it('should maintain whitespace', function() {
+      assert.equal(compileE(' 1 '), ' 1 ');
+    });
+    it('should work for unary operators', function() {
+      assert.equal(compileE('-1'), '-1');
+      assert.equal(compileE('- 1'), '- 1');
+      assert.equal(compileE('1-1'), '1-1');
+    });
+    it('should work for all binary operators', function() {
+      assert.equal(compileE('1^1'), '1^1');
+      assert.equal(compileE('1/ 1'), '1/ 1');
+      assert.equal(compileE('1 %1'), '1 %1');
+    });
+    it('should work for nary operators', function() {
+      assert.equal(compileE('1+1'), '1+1');
+      assert.equal(compileE('1+1+1'), '1+1+1');
+    });
+    it('should work for nested expressions', function() {
+      assert.equal(compileE('(1)'), '(1)');
+      assert.equal(compileE(' ( 1 ) '), ' ( 1 ) ');
+    });
+    it('should work for functions', function() {
+      assert.equal(compileE('sin(x)'), 'sin(x)');
+      assert.equal(compileE(' sin (x)'), ' sin (x)');
+    });
+  });
+  describe('on more interesting ASTs', function() {
+    it('should work', function() {
+      assert.equal(compileE('(1 + sin((x))) * 3^(sqrt(7) + 1)'),
+        '(1 + sin((x))) * 3^(sqrt(7) + 1)');
     });
   });
 });
