@@ -37,6 +37,43 @@ var parenDepthMod = function(token) {
 };
 
 
+var pullSubExpressions = function(tokens) {
+  var token,
+      parenDepth = 0,
+      subExprTokens,
+      subAST,
+      outputTokens = [],
+      openTempl;
+
+  for (var i = 0; i < tokens.length; i++) {
+    token = tokens[i];
+    if (parenDepth === 0) {
+      if (token.token === 'paren') {
+        parenDepth += 1;
+        subExprTokens = [];
+        openTempl = token.repr;
+      } else {
+        outputTokens.push(token);
+      }
+    } else {
+      if (token.token === 'paren') {
+        parenDepth += parenDepthMod(token);
+        if (parenDepth === 0) {
+          subAST = parseTokens(subExprTokens);
+          subAST.template = openTempl + subAST.template + token.repr;
+          outputTokens.push(subAST);
+        } else {
+          subExprTokens.push(token);
+        }
+      } else {
+        subExprTokens.push(token);
+      }
+    }
+  }
+  return outputTokens;
+};
+
+
 var validateParens = function(tokens) {
   var checkParens = R.pipe(
     R.filter(R.where({type: 'paren'})),
@@ -87,17 +124,22 @@ var stepTrios = function(puller) {
 
 
 var pullSpaces = stepTrios(function(tL, t, tR) {
+  tR = R.cloneObj(tR);
+  var templProp;
+
   if (tR.type === 'token' && tR.token === 'space') {
-    // trailing spaces are lost, but that's ok...
+    // the very first (right-most) token could be whitespace
+    t = R.cloneObj(t);
+    templProp = t.type === 'token' ? 'repr' : 'template';
+    t[templProp] = t[templProp] + tR.repr;
     return [[tL, t], null];
   }
-  var tRT = R.cloneObj(tR);
-  tRT.repr = tRT.repr || tRT.value;
   if (t.type === 'token' && t.token === 'space') {
-    tRT.repr = t.value + tRT.repr;
-    return [[tL], tRT];
+    templProp = tR.type === 'token' ? 'repr' : 'template';
+    tR[templProp] = t.repr + tR[templProp];
+    return [[tL], tR];
   } else {
-    return [[tL, t], tRT];
+    return [[tL, t], tR];
   }
 });
 
@@ -147,43 +189,6 @@ var injectToken = function(tokenToInject, options) {
       return out;
     }, [], tokens);
   };
-};
-
-
-var pullSubExpressions = function(tokens) {
-  var token,
-      parenDepth = 0,
-      subExprTokens,
-      subAST,
-      outputTokens = [],
-      openTempl;
-
-  for (var i = 0; i < tokens.length; i++) {
-    token = tokens[i];
-    if (parenDepth === 0) {
-      if (token.token === 'paren') {
-        parenDepth += 1;
-        subExprTokens = [];
-        openTempl = token.repr;
-      } else {
-        outputTokens.push(token);
-      }
-    } else {
-      if (token.token === 'paren') {
-        parenDepth += parenDepthMod(token);
-        if (parenDepth === 0) {
-          subAST = parseTokens(subExprTokens);
-          subAST.template = openTempl + subAST.template + token.repr;
-          outputTokens.push(subAST);
-        } else {
-          subExprTokens.push(token);
-        }
-      } else {
-        subExprTokens.push(token);
-      }
-    }
-  }
-  return outputTokens;
 };
 
 
