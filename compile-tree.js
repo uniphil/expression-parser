@@ -90,7 +90,7 @@ var domifiers = R.compose(
 });
 
 
-function domify(root, ider) {
+function domify(root) {
   var children = R.map(domify, root.children);
   return domifiers[root.type](root, children);
 }
