@@ -67,32 +67,32 @@ describe('Lexer', function() {
       assert.deepEqual(lex(''), [], 'empty expression -> empty list');
     });
     it('should otherswise be an array of objects', function() {
-      assert.deepEqual(lex(' '), [{type: 'token', token: 'space', value: ' '}]);
+      assert.deepEqual(lex(' '), [{type: 'token', token: 'space', value: ' ', repr: ' '}]);
       assert.deepEqual(
         lex('2 + sin(t)'),
-        [{type: 'token', token: 'literal', value: '2'},
-         {type: 'token', token: 'space', value: ' '},
-         {type: 'token', token: 'operator', value: '+'},
-         {type: 'token', token: 'space', value: ' '},
-         {type: 'token', token: 'name', value: 'sin'},
-         {type: 'token', token: 'paren', value: '('},
-         {type: 'token', token: 'name', value: 't'},
-         {type: 'token', token: 'paren', value: ')'}]);
+        [{type: 'token', token: 'literal', value: '2', repr: '2'},
+         {type: 'token', token: 'space', value: ' ', repr: ' '},
+         {type: 'token', token: 'operator', value: '+', repr: '+'},
+         {type: 'token', token: 'space', value: ' ', repr: ' '},
+         {type: 'token', token: 'name', value: 'sin', repr: 'sin'},
+         {type: 'token', token: 'paren', value: '(', repr: '('},
+         {type: 'token', token: 'name', value: 't', repr: 't'},
+         {type: 'token', token: 'paren', value: ')', repr: ')'}]);
     });
   });
   describe('invalid tokens', function() {
     it('should give 1-char tokens of token: "null"', function() {
-      assert.deepEqual(lex('!'), [{type: 'token', token: null, value: '!'}]);
+      assert.deepEqual(lex('!'), [{type: 'token', token: null, value: '!', repr: '!'}]);
       assert.deepEqual(
         lex('!@&'),
-        [{type: 'token', token: null, value: '!'},
-         {type: 'token', token: null, value: '@'},
-         {type: 'token', token: null, value: '&'}]);
+        [{type: 'token', token: null, value: '!', repr: '!'},
+         {type: 'token', token: null, value: '@', repr: '@'},
+         {type: 'token', token: null, value: '&', repr: '&'}]);
       assert.deepEqual(
         lex('abc!def'),
-        [{type: 'token', token: 'name', value: 'abc'},
-         {type: 'token', token: null, value: '!'},
-         {type: 'token', token: 'name', value: 'def'}]);
+        [{type: 'token', token: 'name', value: 'abc', repr: 'abc'},
+         {type: 'token', token: null, value: '!', repr: '!'},
+         {type: 'token', token: 'name', value: 'def', repr: 'def'}]);
     });
   });
   describe('creates valid tokens', function() {
@@ -154,6 +154,11 @@ describe('Parser', function() {
     });
     it('should puke on invalid operators', function() {
       assert.throws(function() { parse('$'); }, parse.ParseError);
+    });
+    it('should not die on whitespace', function() {
+      assert.doesNotThrow(function() { parse(' 1'); }, parse.ParseError);
+      assert.doesNotThrow(function() { parse('1 '); }, parse.ParseError);
+      assert.doesNotThrow(function() { parse('1 + 1'); }, parse.ParseError);
     });
   });
   describe('parens', function() {
@@ -280,6 +285,13 @@ describe('Function compiler', function() {
   describe('invalid expressions', function() {
     it('should just let the parser throw on error', function() {
       assert.throws(function() { compileF('#'); }, parse.ParseError);
+    });
+  });
+  describe('expressions with spaces', function() {
+    it('should ignore spaces', function() {
+      assert.equal(compileF(' 1')(), compileF('1')());
+      assert.equal(compileF('1 ')(), compileF('1')());
+      assert.equal(compileF('1 + 1')(), compileF('1+1')());
     });
   });
   describe('sample expressions', function() {
