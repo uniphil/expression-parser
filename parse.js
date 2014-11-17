@@ -19,11 +19,13 @@ var parseTokens;  // implemented later; declared here because we recurse to it
 var astNode = function(nodeType, children, options) {
   children = children || [];
   options = options || {};
+  var template = options.template || '#';
+  delete options.template;
   return {
     id: options.id || undefined,
     type: 'ASTNode',
     node: nodeType,
-    // template: options.template || '#',
+    template: template,
     children: children,
     options: options
   };
@@ -52,55 +54,82 @@ var validateParens = function(tokens) {
   return tokens;
 };
 
-var pullOperator = function(symbol, ary, funcName) {
+
+var stepTrios = function(puller) {
+  // steps right to left
+
+  var getTrio = function(leftovers, tokens) {
+    return [
+      leftovers.pop() || tokens.pop(),
+      leftovers.pop() || tokens.pop(),
+      leftovers.pop() || tokens.pop()
+    ].reverse();
+  };
+
+  return function(tokens) {
+    var pulled = [[], null],
+        output = [],
+        trio;
+    while (true) {
+      trio = getTrio(pulled[0], tokens);
+      if (!trio[1]) {
+        if (trio[2]) { output.unshift(trio[2]); }
+        break;
+      }
+      pulled = puller.apply(null, trio);
+      if (pulled[1] !== null) {
+        output.unshift(pulled[1]);
+      }
+    }
+    return output;
+  };
+};
+
+
+var pullSpaces = stepTrios(function(tL, t, tR) {
+  if (tR.type === 'token' && tR.token === 'space') {
+    // trailing spaces are lost, but that's ok...
+    return [[tL, t], null];
+  }
+  var tRT = R.cloneObj(tR);
+  tRT.repr = tRT.repr || tRT.value;
+  if (t.type === 'token' && t.token === 'space') {
+    tRT.repr = t.value + tRT.repr;
+    return [[tL], tRT];
+  } else {
+    return [[tL, t], tRT];
+  }
+});
+
+
+var pullOps = function(symbol, ary, funcName) {
   var arys = {
     unary: function(tL, t, tR) {
-      return [[tL, astNode('func', [tR], {key: funcName})], null];
+      var node = astNode('func', [tR],
+        { key: funcName, template: t.repr + '#' });
+      return [[tL, node], null];
     },
     binary: function(tL, t, tR) {
-      return [[astNode('func', [tL, tR], {key: funcName})], null];
+      var node = astNode('func', [tL, tR],
+        { key: funcName, template: '#' + t.repr + '#' });
+      return [[node], null];
     },
     nary: function(tL, t, tR) {
       if (tR.type === 'ASTNode' && tR.node === 'func' && tR.options.key === funcName) {
         tR.children.unshift(tL);
+        tR.template = '#' + t.repr + tR.template;
         return [[tR], null];
       }
       return arys.binary(tL, t, tR);
     }
   };
 
-  return function(tL, t, tR) {
+  return stepTrios(function(tL, t, tR) {
     if (t.type === 'token' && t.token === 'operator' && t.value === symbol) {
       return arys[ary](tL, t, tR);
     }
     return [[tL, t], tR];
-  };
-};
-
-var pullOps = function(opName, ary, funcName, preOp) {
-  var puller = pullOperator(opName, ary, funcName, preOp);
-
-  return function(tokens) {
-    var pulled,
-        output = [],
-        tR = tokens.pop(),
-        t = tokens.pop(),
-        tL = tokens.pop();
-    while (true) {
-      if (!t) {
-        output.unshift(tR);
-        break;
-      }
-      pulled = puller(tL, t, tR);
-      if (pulled[1] !== null) {
-        output.unshift(pulled[1]);
-      }
-      tR = pulled[0].pop();
-      t = pulled[0].pop() || tokens.pop();
-      tL = tokens.pop();
-    }
-    return output;
-  };
+  });
 };
 
 
@@ -110,7 +139,9 @@ var injectToken = function(tokenToInject, options) {
       if (token.type === 'ASTNode' && token.node === 'func' &&
           token.options.key === options.beforeOpNode &&
           tokens[i - 1]) {
-        out.push(lex.token('operator', tokenToInject));
+        var injectedToken = lex.token('operator', tokenToInject);
+        injectedToken.repr = '';
+        out.push(injectedToken);
       }
       out.push(token);
       return out;
@@ -124,7 +155,8 @@ var pullSubExpressions = function(tokens) {
       parenDepth = 0,
       subExprTokens,
       subAST,
-      outputTokens = [];
+      outputTokens = [],
+      openTempl;
 
   for (var i = 0; i < tokens.length; i++) {
     token = tokens[i];
@@ -132,6 +164,7 @@ var pullSubExpressions = function(tokens) {
       if (token.token === 'paren') {
         parenDepth += 1;
         subExprTokens = [];
+        openTempl = token.repr;
       } else {
         outputTokens.push(token);
       }
@@ -140,6 +173,7 @@ var pullSubExpressions = function(tokens) {
         parenDepth += parenDepthMod(token);
         if (parenDepth === 0) {
           subAST = parseTokens(subExprTokens);
+          subAST.template = openTempl + subAST.template + token.repr;
           outputTokens.push(subAST);
         } else {
           subExprTokens.push(token);
@@ -153,30 +187,14 @@ var pullSubExpressions = function(tokens) {
 };
 
 
-var pullFunctions = function(tokens) {
+var pullFunctions = stepTrios(function(tL, t, tR) {
   // find [name, expr]s, and swap as fn(key=name, children=expr.children)
-  if (tokens.length < 2) {
-    return tokens;  // there cannot be any functions
+  if (t.token === 'name' && tR.node === 'expr') {
+    return [[tL], astNode('func', tR.children, {key: t.value,
+      template: t.repr + tR.template})];
   }
-  var outputTokens = [],
-      token,
-      exprNode;
-  for (var i = 0; i < tokens.length - 1; i++) {
-    token = tokens[i];
-    exprNode = tokens[i + 1];
-    if (token.token === 'name' && exprNode.node === 'expr') {
-      outputTokens.push(astNode('func', exprNode.children, {key: token.value}));
-      i++;  // skip over the expr token
-    } else {
-      outputTokens.push(token);
-    }
-  }
-  if (outputTokens[outputTokens.length - 1].node !== 'func') {
-    // if the last thing isn't a function's expression, we still want it
-    outputTokens.push(tokens[tokens.length - 1]);
-  }
-  return outputTokens;
-};
+  return [[tL, t], tR];
+});
 
 
 var validateHasValue = function(tokens) {
@@ -197,9 +215,11 @@ var validateHasValue = function(tokens) {
 var pullValues = R.map(function(token) {
   if (token.type === 'token') {
     if (token.token === 'name') {
-      return astNode('name', [], { key: token.value });
+      return astNode('name', [],
+        { key: token.value, template: token.repr });
     } else if (token.token === 'literal') {
-      return astNode('literal', [], { value: parseFloat(token.value) });
+      return astNode('literal', [],
+        { value: parseFloat(token.value), template: token.repr });
     }
   }
   return token;
@@ -241,6 +261,7 @@ var stampIds = function(rootNode) {
 parseTokens = R.pipe(
   pullSubExpressions,
   validateHasValue,
+  pullSpaces,
   pullFunctions,
   pullValues,
   validateOperators,

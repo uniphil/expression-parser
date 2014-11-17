@@ -9,11 +9,12 @@ var tokenMatches = [
 ];
 
 
-var mkToken = function(token, value) {
+var mkToken = function(token, value, repr) {
   return {
     type: 'token',
     token: token,
-    value: value
+    value: value,
+    repr: repr || value
   };
 };
 
