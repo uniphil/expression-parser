@@ -49,6 +49,7 @@ var pullSubExpressions = function(tokens) {
     token = tokens[i];
     if (parenDepth === 0) {
       if (token.token === 'paren') {
+        if (token.value === ')') { throw new ParseError('Unexpected close paren ")"'); }
         parenDepth += 1;
         subExprTokens = [];
         openTempl = token.repr;
@@ -70,25 +71,8 @@ var pullSubExpressions = function(tokens) {
       }
     }
   }
+  if (parenDepth !== 0) { throw new ParseError('Unclosed paren'); }
   return outputTokens;
-};
-
-
-var validateParens = function(tokens) {
-  var checkParens = R.pipe(
-    R.filter(R.where({type: 'paren'})),
-    R.map(parenDepthMod),
-    R.reduce(function(depth, depthChange) {
-      var nextDepth = depth + depthChange;
-      if (nextDepth < 0) { throw new ParseError('unexpected close paren'); }
-      return nextDepth;
-    }, 0),
-    function(d) {
-      if (d !== 0) { throw new ParseError('unmatched parentheses'); }
-    }
-  );
-  checkParens(tokens);
-  return tokens;
 };
 
 
@@ -284,7 +268,6 @@ parseTokens = R.pipe(
 
 var parse = R.pipe(
   lex,
-  validateParens,
   parseTokens,
   validateOneValue,
   stampIds
