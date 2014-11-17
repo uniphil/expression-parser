@@ -227,6 +227,17 @@ var validateOneValue = function(nodes) {
 };
 
 
+var stampIds = function(rootNode) {
+  var i = 0;
+  (function stamper(node) {
+    if (node.id) { throw new Error('node already has an id?'); }
+    node.id = i++;
+    R.forEach(stamper, node.children);
+  })(rootNode);
+  return rootNode;
+};
+
+
 parseTokens = R.pipe(
   pullSubExpressions,
   validateHasValue,
@@ -249,7 +260,8 @@ var parse = R.pipe(
   lex,
   validateParens,
   parseTokens,
-  validateOneValue
+  validateOneValue,
+  stampIds
 );
 
 
