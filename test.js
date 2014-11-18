@@ -2,8 +2,9 @@ require('mocha');
 var assert = require('chai').assert;
 
 var parse = require('./parse');
-var compileF = require('./compile-func');
 var compileE = require('./compile-echo');
+var compileF = require('./compile-func');
+var compileV = require('./compile-values');
 
 
 describe('Lexer', function() {
@@ -354,6 +355,19 @@ describe('Function compiler', function() {
       assert.equal(compileF('PI')(), Math.PI);
       assert.closeTo(compileF('sin(PI)')(), 0, eps);
       assert.closeTo(compileF('cos(PI)')(), -1, eps);
+    });
+  });
+});
+
+
+describe('Value compiler', function() {
+  describe('top-level solutions', function() {
+    it('should agree with the plain function compiler', function() {
+      assert.equal(compileV('1')()[0], compileF('1')());
+    });
+    it('should have a value for each AST node', function() {
+      assert.equal(compileV('1')().length, 2);
+      assert.equal(compileV('1+1')().length, 4);
     });
   });
 });
