@@ -97,5 +97,6 @@ var compile = R.pipe(
 );
 
 compile.compileAST = compileAST;
+compile.astToFn = R.pipe(compileAST, functionify);
 
 module.exports = compile;
