@@ -1,7 +1,7 @@
 {
   "name": "expression-compiler",
   "repository": "git@github.com:uniphil/expression.git",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "",
   "main": "compile-func.js",
   "scripts": {
