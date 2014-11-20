@@ -1,7 +1,7 @@
 {
   "name": "expression-compiler",
   "repository": "git@github.com:uniphil/expression.git",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
   "main": "compile-func.js",
   "scripts": {
@@ -17,7 +17,9 @@
     "gulp-load-plugins": "^0.7.0",
     "gulp-mocha": "^1.1.1",
     "jshint-stylish": "^1.0.0",
-    "mocha": "^1.21.4",
-    "ramda": "^0.6.0"
+    "mocha": "^1.21.4"
+  },
+  "dependencies": {
+    "ramda": "^0.8.0"
   }
 }
