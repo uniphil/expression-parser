@@ -16,5 +16,5 @@ var _echo = function _echo(node) {
 
 
 var echo = R.pipe(parse, _echo);
-echo.ast = _echo;
+echo.fromAST = _echo;
 module.exports = echo;

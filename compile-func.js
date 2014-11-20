@@ -90,13 +90,9 @@ var functionify = function(expr) {
 };
 
 
-var compile = R.pipe(
-  parse,
-  compileAST,
-  functionify
-);
-
-compile.compileAST = compileAST;
-compile.astToFn = R.pipe(compileAST, functionify);
+var compile = R.pipe(parse, compileAST, functionify);
+compile.fromAST = R.pipe(compileAST, functionify);
+compile.express = R.pipe(parse, compileAST);
+compile.express.fromAST = compileAST;
 
 module.exports = compile;

@@ -1,9 +1,9 @@
 {
   "name": "expression-compiler",
-  "repository": "git@github.com:uniphil/expression.git",
-  "version": "0.1.1",
+  "repository": "git@github.com:uniphil/expression-compiler.git",
+  "version": "0.2.0",
   "description": "",
-  "main": "compile-func.js",
+  "main": "index.js",
   "scripts": {
     "test": "gulp test"
   },
