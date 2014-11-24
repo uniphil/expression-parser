@@ -1,7 +1,7 @@
 expression
 ==========
 
-[![Build Status](https://travis-ci.org/uniphil/expression.svg?branch=master)](https://travis-ci.org/uniphil/expression)
+[![Build Status](https://travis-ci.org/uniphil/expression-compiler.svg?branch=master)](https://travis-ci.org/uniphil/expression-compiler)
 
 fun with math expressions
 
