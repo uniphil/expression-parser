@@ -128,11 +128,19 @@ var pullSpaces = stepTrios(function(tL, t, tR) {
 });
 
 
-var pullOps = function(symbol, ary, funcName) {
+var pullOps = function(symbol, ary, funcName, options) {
   var arys = {
     unary: function(tL, t, tR) {
       var node = astNode('func', [tR],
         { key: funcName, template: t.repr + '#' });
+      if (options.binarify &&
+          tL &&  // it's not the first token
+          !(tL.type === 'token' && tL.token === 'operator') &&  // thing before isn't an op
+          !(tL.type === 'astNode' && tL.node === 'func')) {  // thing before isn't an op
+        var injectedToken = lex.token('operator', options.binarify);
+        injectedToken.repr = '';
+        return [[tL, injectedToken, node], null];
+      }
       return [[tL, node], null];
     },
     binary: function(tL, t, tR) {
@@ -156,23 +164,6 @@ var pullOps = function(symbol, ary, funcName) {
     }
     return [[tL, t], tR];
   });
-};
-
-
-var injectToken = function(tokenToInject, options) {
-  return function(tokens) {
-    return R.reduce.idx(function(out, token, i, tokens) {
-      if (token.type === 'ASTNode' && token.node === 'func' &&
-          token.options.key === options.beforeOpNode &&
-          tokens[i - 1]) {
-        var injectedToken = lex.token('operator', tokenToInject);
-        injectedToken.repr = '';
-        out.push(injectedToken);
-      }
-      out.push(token);
-      return out;
-    }, [], tokens);
-  };
 };
 
 
@@ -255,8 +246,7 @@ parseTokens = R.pipe(
   pullValues,
   validateOperators,
   pullOps('^', 'binary', 'pow'),
-  pullOps('-', 'unary', 'neg'),
-  injectToken('+', {beforeOpNode: 'neg'}),
+  pullOps('-', 'unary', 'neg', {binarify: '+'}),
   pullOps('*', 'nary', 'product'),
   pullOps('/', 'binary', 'div'),
   pullOps('%', 'binary', 'mod'),

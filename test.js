@@ -217,6 +217,9 @@ describe('Parser', function() {
     it('should work for 1--2', function() {
       assert.doesNotThrow(function() { parse('1--2'); }, parse.ParseError);
     });
+    it('should work for unary negation after operators like 1+-1', function() {
+      assert.doesNotThrow(function() { parse('1+-1'); }, parse.ParseError);
+    });
     it('should error on dangling close paren', function() {
       assert.throws(function() { parse('1)'); }, parse.ParseError);
     });
