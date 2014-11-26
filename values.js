@@ -3,7 +3,7 @@
 
 var R = require('ramda');
 var parse = require('./parse');
-var astFunc = require('./compile-func').fromAST;
+var astFunc = require('./func').fromAST;
 
 
 var _values = function(AST) {

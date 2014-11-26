@@ -2,9 +2,9 @@ require('mocha');
 var assert = require('chai').assert;
 
 var parse = require('./parse');
-var compileE = require('./compile-echo');
-var compileF = require('./compile-func');
-var compileV = require('./compile-values');
+var compileE = require('./echo');
+var compileF = require('./func');
+var compileV = require('./values');
 
 
 describe('Lexer', function() {
