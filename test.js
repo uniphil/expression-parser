@@ -360,6 +360,15 @@ describe('Function compiler', function() {
       assert.closeTo(compileF('cos(PI)')(), -1, eps);
     });
   });
+  describe('regressions', function() {
+    it('should not be sensitive to casing of constants in Math', function() {
+      assert.equal(compileF('e')(), Math.E);
+      assert.equal(compileF('pi')(), Math.PI);
+      assert.equal(compileF('pI')(), Math.PI);
+      assert.equal(compileF('Pi')(), Math.PI);
+      assert.equal(compileF('PI')(), Math.PI);
+    });
+  });
 });
 
 

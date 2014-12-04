@@ -16,11 +16,12 @@ var transformers = {
              subs: [] };
   },
   name: function(node) {
-    var key = node.options.key;
-    if (R.prop(key, Math)) {
+    var key = node.options.key,
+        upperKey = key.toUpperCase();
+    if (R.prop(upperKey, Math)) {
       return {
         c: function() {
-          return 'Math.' + key;
+          return 'Math.' + upperKey;
         },
         subs: []
       };
