@@ -213,6 +213,21 @@ var failOnBadTokens = function(tokens) {
 };
 
 
+var pullRoot = function(tokens) {
+  var templateStart = '',
+      templateEnd = '',
+      template;
+  if (tokens[0] && tokens[0].type === 'token' && tokens[0].token === 'space') {
+    templateStart = tokens.shift().repr;
+  }
+  if (tokens.slice(-1) && tokens.slice(-1).type === 'token' && tokens.slice(-1).token === 'space') {
+    templateEnd = tokens.pop().repr;
+  }
+  template = templateStart + R.repeatN('#', tokens.length || 0).join('') + templateEnd;
+  return astNode('expr', tokens, {template: template});
+};
+
+
 var stampIds = function(rootNode) {
   var i = 0;
   (function stamper(node) {
@@ -238,7 +253,7 @@ parseTokens = R.pipe(
   pullOps('+', 'nary', 'sum'),
   pullOps('<', 'binary', 'lessThan'),
   pullOps('>', 'binary', 'greaterThan'),
-  R.lPartial(astNode, 'expr')
+  pullRoot
 );
 
 var parse = R.pipe(
