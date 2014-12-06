@@ -178,21 +178,6 @@ var pullFunctions = stepTrios(function(tL, t, tR) {
 });
 
 
-var validateHasValue = function(tokens) {
-  var hasValue = R.reduce(function(foundValue, token) {
-    if (R.contains(token.token, ['literal', 'name']) || token.node === 'expr') {
-      return true;
-    } else {
-      return foundValue;
-    }
-  }, false);
-  if (!hasValue(tokens)) {
-    throw new ParseError('Expression has no value ' + JSON.stringify(tokens));
-  }
-  return tokens;
-};
-
-
 var pullValues = R.map(function(token) {
   if (token.type === 'token') {
     if (token.token === 'name') {
@@ -210,21 +195,21 @@ var pullValues = R.map(function(token) {
 var validateOperators = function(tokens) {
   var first = tokens[0],
       last = tokens[tokens.length - 1];
-  if (first.token === 'operator' && first.value !== '-') {
+  if (first && first.token === 'operator' && first.value !== '-') {
     throw new ParseError('non-unary leading operator: ' + first.value);
   }
-  if (last.token === 'operator') {
+  if (last && last.token === 'operator') {
     throw new ParseError('trailing operator: ' + last.value);
   }
   return tokens;
 };
 
 
-var validateOneValue = function(nodes) {
-  if (nodes.children.length !== 1) {
-    throw new ParseError('The expression must resolve to exactly one value');
-  }
-  return nodes;
+var failOnUnparsedTokens = function(tokens) {
+  R.forEach(function(token) {
+    throw new ParseError('could not parse token: ' + token.value);
+  }, R.filter(R.where({type: 'token'}), tokens));
+  return tokens;
 };
 
 
@@ -241,7 +226,6 @@ var stampIds = function(rootNode) {
 
 parseTokens = R.pipe(
   pullSubExpressions,
-  validateHasValue,
   pullSpaces,
   pullFunctions,
   pullValues,
@@ -254,13 +238,13 @@ parseTokens = R.pipe(
   pullOps('+', 'nary', 'sum'),
   pullOps('<', 'binary', 'lessThan'),
   pullOps('>', 'binary', 'greaterThan'),
+  failOnUnparsedTokens,
   R.lPartial(astNode, 'expr')
 );
 
 var parse = R.pipe(
   lex,
   parseTokens,
-  validateOneValue,
   stampIds
 );
 

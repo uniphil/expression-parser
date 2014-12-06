@@ -152,15 +152,6 @@ describe('Lexer', function() {
 
 
 describe('Parser', function() {
-
-  describe('edge cases', function() {
-    it('should error on empty expression', function() {
-      assert.throws(function() { parse(''); }, parse.ParseError);
-      assert.throws(function() { parse('()'); }, parse.ParseError);
-      assert.throws(function() { parse('f()'); }, parse.ParseError);
-      assert.throws(function() { parse('1+()'); }, parse.ParseError);
-    });
-  });
   describe('simple cases', function() {
     it('should parse a simple literal value', function() {
       assert.equal(parse('1').children[0].node, 'literal');
@@ -251,6 +242,13 @@ describe('Parser', function() {
     });
     it('should error on dangling open paren', function() {
       assert.throws(function() { parse('1('); }, parse.ParseError);
+    });
+    it('should not die for expressions with no value', function() {
+      assert.doesNotThrow(function() { parse(''); }, parse.ParseError);
+    });
+    it('should not die for expressions with 2 or more values', function() {
+      assert.doesNotThrow(function() { parse('1 1'); }, parse.ParseError);
+      assert.doesNotThrow(function() { parse('1 1 1'); }, parse.ParseError);
     });
     it('should work on some samples from the mojulo gallery', function() {
       assert.doesNotThrow(function() {
