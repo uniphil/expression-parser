@@ -266,3 +266,8 @@ options:
   value: 1
 }
 ```
+
+
+License
+-------
+[MIT](license)
