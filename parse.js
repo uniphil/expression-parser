@@ -205,10 +205,10 @@ var validateOperators = function(tokens) {
 };
 
 
-var failOnUnparsedTokens = function(tokens) {
+var failOnBadTokens = function(tokens) {
   R.forEach(function(token) {
     throw new ParseError('could not parse token: ' + token.value);
-  }, R.filter(R.where({type: 'token'}), tokens));
+  }, R.filter(R.where({token: null}), tokens));
   return tokens;
 };
 
@@ -238,12 +238,12 @@ parseTokens = R.pipe(
   pullOps('+', 'nary', 'sum'),
   pullOps('<', 'binary', 'lessThan'),
   pullOps('>', 'binary', 'greaterThan'),
-  failOnUnparsedTokens,
   R.lPartial(astNode, 'expr')
 );
 
 var parse = R.pipe(
   lex,
+  failOnBadTokens,
   parseTokens,
   stampIds
 );
