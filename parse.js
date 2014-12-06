@@ -170,8 +170,9 @@ var pullOps = function(symbol, ary, funcName, options) {
 var pullFunctions = stepTrios(function(tL, t, tR) {
   // find [name, expr]s, and swap as fn(key=name, children=expr.children)
   if (t.token === 'name' && tR.node === 'expr') {
-    return [[tL], astNode('func', tR.children, {key: t.value,
-      template: t.repr + tR.template})];
+    return [[tL], astNode('func', tR.children, {
+      key: t.value,
+      template: t.repr + tR.template })];
   }
   return [[tL, t], tR];
 });
@@ -253,7 +254,7 @@ parseTokens = R.pipe(
   pullOps('+', 'nary', 'sum'),
   pullOps('<', 'binary', 'lessThan'),
   pullOps('>', 'binary', 'greaterThan'),
-  R.curryN(2, astNode)('expr')
+  R.lPartial(astNode, 'expr')
 );
 
 var parse = R.pipe(
