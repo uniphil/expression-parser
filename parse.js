@@ -19,7 +19,7 @@ var parseTokens;  // implemented later; declared here because we recurse to it
 var astNode = function(nodeType, children, options) {
   children = children || [];
   options = options || {};
-  var template = options.template || '#';
+  var template = options.template || R.repeatN('#', children.length).join('');
   delete options.template;
   return {
     id: options.id || undefined,
