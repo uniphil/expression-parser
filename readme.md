@@ -3,7 +3,12 @@ Expression Compiler
 
 [![Build Status](https://travis-ci.org/uniphil/expression-compiler.svg?branch=master)](https://travis-ci.org/uniphil/expression-compiler)
 
-Compile math expressions to a useful AST, with built-in compilers to turn the AST into a sanitized javascript function.
+Parse math expressions to a useful AST, with built-in compilers for:
+ * creating a sanitized executable javascript function
+ * creating a function that returns a value for every node of the AST when executed
+ * echoes back the original expression if parsing succeeds
+
+The compilers are provided for convenience, an will not be pulled into a build unless you specifically `require` them. The AST is pretty easy to walk if you build your own compiler -- the echo compiler only requires [seven lines of code](https://github.com/uniphil/expression-compiler/blob/fa7a0e2a9207fd48752d3376dc624f2b9b58d31a/echo.js#L7-L15) to implement
 
 
 Install
@@ -23,9 +28,7 @@ and also get the raw js generated for the function
 
 ```node
 > var mkFunc = require('expression-compiler/func');
-undefined
 > var expressionFunc = compile('c*sin(2*t)+1');
-undefined
 > expressionFunc({c: 0.5});
 0.9999999999999999
 > mkFunc.express('sqrt(x^2 + y^2)')
@@ -41,9 +44,7 @@ and then echo back the original expression with just the AST
 
 ```node
 > var parse = require('expression-compiler/parse');
-undefind
 > var ast = parse('sin(t)^2 + cos(t)^2');
-unefined
 > ast
 { id: 0,
   type: 'ASTNode',
@@ -162,9 +163,19 @@ unefined
   ],
   "options": {}
 }
-undefined
+> var valuer = require('expression-compiler/values');
+> values.fromAST(ast)({t: 0})
+[ 1,
+  1,
+  0,
+  0,
+  0,
+  2,
+  1,
+  1,
+  0,
+  2 ]
 > var echoer = require('expression-compiler/echo');
-undefined
 > echoer.fromAST(ast);
 'sin(t)^2 + cos(t)^2'
 ```
@@ -214,7 +225,7 @@ Infix functions should be normal function nodes. Here are some examples for `+` 
 {
   id: 0,
   type: 'ASTNode',
-  node: 'func',
+  node: 'func',u
   template: '# + # + #',
   children: [someNode, anotherNode, andAnother],
   options: {
