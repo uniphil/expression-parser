@@ -302,6 +302,11 @@ describe('Echo compiler', function() {
         '(1 + sin((x))) * 3^(sqrt(7) + 1)');
     });
   });
+  describe('regressions', function() {
+    it('should work for multi-arg functions', function() {
+      assert.equal(compileE('min(1 1)'), 'min(1 1)');
+    });
+  });
 });
 
 
