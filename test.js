@@ -1,15 +1,41 @@
 require('mocha');
 var assert = require('chai').assert;
 
+var lex = require('./lex');
 var parse = require('./parse');
 var compileE = require('./echo');
 var compileF = require('./func');
 var compileV = require('./values');
 
 
-describe('Lexer', function() {
-  var lex = parse.lex;
+describe('API', function() {
+  describe('parser', function() {
+    it('should export a function', function() {
+      assert.typeOf(parse, 'function');
+    });
+    it('should expose the lexer', function() {
+      assert.equal(parse.lex, lex);
+    });
+    it('should accept tokens via fromToken', function() {
+      assert.typeOf(parse.fromTokens, 'function');
+    });
+  });
+  describe('compilers', function() {
+    it('should export a function', function() {
+      assert.typeOf(compileE, 'function');
+      assert.typeOf(compileF, 'function');
+      assert.typeOf(compileV, 'function');
+    });
+    it('should accept an AST via fromAST', function() {
+      assert.typeOf(compileE.fromAST, 'function');
+      assert.typeOf(compileF.fromAST, 'function');
+      assert.typeOf(compileV.fromAST, 'function');
+    });
+  });
+});
 
+
+describe('Lexer', function() {
   describe('individual symbols', function() {
     it('should detect the right type of token', function() {
       assert.propertyVal(lex(' ')[0], 'token', 'space', 'spaces are spaces');

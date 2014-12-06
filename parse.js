@@ -268,7 +268,7 @@ var parse = R.pipe(
 parse.ParseError = ParseError;
 parse.astNode = astNode;
 parse.lex = lex;
-parse.parseTokens = parseTokens;
+parse.fromTokens = parseTokens;
 
 
 module.exports = parse;
