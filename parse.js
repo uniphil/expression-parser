@@ -119,6 +119,11 @@ var pullSpaces = stepTrios(function(tL, t, tR) {
     return [[tL, t], null];
   }
   if (lex.check(t, {token: 'space'})) {
+    if (tL && (lex.check(tR, {token: 'literal'}) || lex.check(tR, {token: 'name'}))) {
+      templProp = lex.check(tL) ? 'repr' : 'template';
+      tL[templProp] += t.repr;
+      return [[tL], tR];
+    }
     templProp = lex.check(tR) ? 'repr' : 'template';
     tR[templProp] = t.repr + tR[templProp];
     return [[tL], tR];

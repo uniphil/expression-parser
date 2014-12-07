@@ -227,6 +227,11 @@ describe('Parser', function() {
       assert.equal(parse('1-2-3').children[0].options.key, 'sum');
     });
   });
+  describe('templating', function() {
+    it('should attach spaces to the lower-precedent neighbour', function() {
+      assert.equal(parse('1 + 1').children[0].template, '# + #');
+    });
+  });
   describe('ParseError', function() {
     it('should break if instantiated without "new" operator', function() {
       assert.throws(function() { parse.ParseError(); }, Error);
