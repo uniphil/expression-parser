@@ -400,6 +400,9 @@ describe('Function compiler', function() {
     it('should work with literals', function() {
       assert.equal(compileF('1+a')({a: 1}), 2);
     });
+    it('should follow BEDMAS operator precedence', function() {
+      assert.equal(compileF('1/2*3')(), 1.5);
+    });
     it('should execute named functions from the context', function() {
       /* istanbul ignore next */
       var ctx = { times2: function(n) { return n * 2; } };

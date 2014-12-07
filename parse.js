@@ -226,6 +226,29 @@ var failOnBadTokens = function(tokens) {
 };
 
 
+var actuallyEqualOps = function(wasLower, wasHigher) {
+  function flipWithLastChild(node) {
+    var newHeir = node.children.pop(),  // should be the last child! does not handle nAry
+        switchedAtBirth = newHeir.children.shift();
+    node.children.push(switchedAtBirth);
+    newHeir.children.unshift(node);
+    return newHeir;
+  }
+
+  function lookForFlips(node) {
+    if (lex.check(node)) { return node; }
+    if (node.node === 'func' && node.options.key === wasLower &&
+        node.children[1] && node.children[1].node === 'func' && node.children[1].options.key === wasHigher) {
+      node = flipWithLastChild(node);
+    }
+    R.forEach(lookForFlips, node.children);
+    return node;
+  }
+
+  return R.map(lookForFlips);
+};
+
+
 var pullRoot = function(tokens) {
   var template = R.repeatN('#', tokens.length || 0).join('');
   if (lex.check(tokens[0], {token: 'space'})) {
@@ -259,6 +282,7 @@ parseTokens = R.pipe(
   pullOps('+', 'nary', 'sum'),
   pullOps('<', 'binary', 'lessThan'),
   pullOps('>', 'binary', 'greaterThan'),
+  actuallyEqualOps('div', 'product'),  // makes * and / have equal precedence
   pullRoot
 );
 
