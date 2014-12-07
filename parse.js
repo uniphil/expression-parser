@@ -128,18 +128,17 @@ var pullSpaces = stepTrios(function(tL, t, tR) {
 });
 
 
-var assertNoSequentialOpTokens = function(t1, t2) {
-  if (t1 && t1.type === 'token' && t1.token === 'operator' &&
-      t2 && t2.type === 'token' && t2.token === 'operator') {
-    throw new ParseError('sequential operators: ' + t1.repr + ', then ' + t2.repr);
+var assertNotOpToken = R.forEach(function(token) {
+  if (token && token.type === 'token' && token.token === 'operator') {
+    throw new ParseError('sequential operator: ' + token.repr);
   }
-};
+});
 
 
 var pullOps = function(symbol, ary, funcName, options) {
   var arys = {
     unary: function(tL, t, tR) {
-      assertNoSequentialOpTokens(t, tR);
+      assertNotOpToken([tR]);
       var node = astNode('func', [tR],
         { key: funcName, template: t.repr + '#' });
       if (options.binarify &&
@@ -153,14 +152,14 @@ var pullOps = function(symbol, ary, funcName, options) {
       return [[tL, node], null];
     },
     binary: function(tL, t, tR) {
-      assertNoSequentialOpTokens(tL, t);
+      assertNotOpToken([tL, tR]);
       var node = astNode('func', [tL, tR],
         { key: funcName, template: '#' + t.repr + '#' });
       return [[node], null];
     },
     nary: function(tL, t, tR) {
       if (tR.type === 'ASTNode' && tR.node === 'func' && tR.options.key === funcName) {
-        assertNoSequentialOpTokens(tL, t);
+        assertNotOpToken([tL, tR]);
         tR.children.unshift(tL);
         tR.template = '#' + t.repr + tR.template;
         return [[tR], null];
