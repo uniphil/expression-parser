@@ -1,22 +1,22 @@
-Expression Compiler
-===================
+Expression Parser
+=================
 
-[![Build Status](https://travis-ci.org/uniphil/expression-compiler.svg?branch=master)](https://travis-ci.org/uniphil/expression-compiler)
-[![Coverage Status](https://img.shields.io/coveralls/uniphil/expression-compiler.svg)](https://coveralls.io/r/uniphil/expression-compiler)
+[![Build Status](https://travis-ci.org/uniphil/expression-parser.svg?branch=master)](https://travis-ci.org/uniphil/expression-parser)
+[![Coverage Status](https://img.shields.io/coveralls/uniphil/expression-parser.svg)](https://coveralls.io/r/uniphil/expression-parser)
 
 Parse math expressions to a useful AST, with built-in compilers for:
  * creating a sanitized executable javascript function
  * creating a function that returns a value for every node of the AST when executed
  * echoes back the original expression if parsing succeeds
 
-The compilers are provided for convenience, an will not be pulled into a build unless you specifically `require` them. The AST is pretty easy to walk if you build your own compiler -- the echo compiler only requires [seven lines of code](https://github.com/uniphil/expression-compiler/blob/fa7a0e2a9207fd48752d3376dc624f2b9b58d31a/echo.js#L7-L15) to implement
+The compilers are provided for convenience, an will not be pulled into a build unless you specifically `require` them. The AST is pretty easy to walk if you build your own compiler -- the echo compiler only requires [seven lines of code](https://github.com/uniphil/expression-parser/blob/fa7a0e2a9207fd48752d3376dc624f2b9b58d31a/echo.js#L7-L15) to implement
 
 
 Install
 -------
 
 ```bash
-$ npm install expression-compiler
+$ npm install expression-parser
 ```
 
 
@@ -28,7 +28,7 @@ Usage
 and also get the raw js generated for the function
 
 ```node
-> var mkFunc = require('expression-compiler/func');
+> var mkFunc = require('expression-parser/func');
 > var expressionFunc = compile('c*sin(2*t)+1');
 > expressionFunc({c: 0.5});
 0.9999999999999999
@@ -44,7 +44,7 @@ Note that everything in the global `Math` is made available by the built-in func
 and then echo back the original expression with just the AST
 
 ```node
-> var parse = require('expression-compiler/parse');
+> var parse = require('expression-parser/parse');
 > var ast = parse('sin(t)^2 + cos(t)^2');
 > ast
 { id: 0,
@@ -164,7 +164,7 @@ and then echo back the original expression with just the AST
   ],
   "options": {}
 }
-> var valuer = require('expression-compiler/values');
+> var valuer = require('expression-parser/values');
 > values.fromAST(ast)({t: 0})
 [ 1,
   1,
@@ -176,7 +176,7 @@ and then echo back the original expression with just the AST
   1,
   0,
   2 ]
-> var echoer = require('expression-compiler/echo');
+> var echoer = require('expression-parser/echo');
 > echoer.fromAST(ast);
 'sin(t)^2 + cos(t)^2'
 ```

@@ -1,6 +1,6 @@
 {
-  "name": "expression-compiler",
-  "repository": "git@github.com:uniphil/expression-compiler.git",
+  "name": "expression-parser",
+  "repository": "git@github.com:uniphil/expression-parser.git",
   "version": "0.3.1",
   "description": "",
   "main": "func.js",
