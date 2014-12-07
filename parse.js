@@ -48,8 +48,8 @@ var pullSubExpressions = function(tokens) {
   for (var i = 0; i < tokens.length; i++) {
     token = tokens[i];
     if (parenDepth === 0) {
-      if (token.token === 'paren') {
-        if (token.value === ')') { throw new ParseError('Unexpected close paren ")"'); }
+      if (lex.check(token, {token: 'paren'})) {
+        if (lex.check(token, {value: ')'})) { throw new ParseError('Unexpected close paren ")"'); }
         parenDepth += 1;
         subExprTokens = [];
         openTempl = token.repr;
@@ -57,7 +57,7 @@ var pullSubExpressions = function(tokens) {
         outputTokens.push(token);
       }
     } else {
-      if (token.token === 'paren') {
+      if (lex.check(token, {token: 'paren'})) {
         parenDepth += parenDepthMod(token);
         if (parenDepth === 0) {
           subAST = parseTokens(subExprTokens);
@@ -111,15 +111,15 @@ var pullSpaces = stepTrios(function(tL, t, tR) {
   tR = R.cloneObj(tR);
   var templProp;
 
-  if (tR.type === 'token' && tR.token === 'space') {
+  if (lex.check(tR, {token: 'space'})) {
     // the very first (right-most) token could be whitespace
     t = R.cloneObj(t);
-    templProp = t.type === 'token' ? 'repr' : 'template';
+    templProp = lex.check(t) ? 'repr' : 'template';
     t[templProp] = t[templProp] + tR.repr;
     return [[tL, t], null];
   }
-  if (t.type === 'token' && t.token === 'space') {
-    templProp = tR.type === 'token' ? 'repr' : 'template';
+  if (lex.check(t, {token: 'space'})) {
+    templProp = lex.check(tR) ? 'repr' : 'template';
     tR[templProp] = t.repr + tR[templProp];
     return [[tL], tR];
   } else {
@@ -129,7 +129,7 @@ var pullSpaces = stepTrios(function(tL, t, tR) {
 
 
 var assertNotOpToken = R.forEach(function(token) {
-  if (token && token.type === 'token' && token.token === 'operator') {
+  if (lex.check(token, {token: 'operator'})) {
     throw new ParseError('sequential operator: ' + token.repr);
   }
 });
@@ -143,7 +143,7 @@ var pullOps = function(symbol, ary, funcName, options) {
         { key: funcName, template: t.repr + '#' });
       if (options.binarify &&
           tL &&  // it's not the first token
-          !(tL.type === 'token' && tL.token === 'operator') &&  // thing before isn't an op
+          !lex.check(tL, {token: 'operator'}) &&  // thing before isn't an op
           !(tL.type === 'astNode' && tL.node === 'func')) {  // thing before isn't an op
         var injectedToken = lex.token('operator', options.binarify);
         injectedToken.repr = '';
@@ -169,7 +169,7 @@ var pullOps = function(symbol, ary, funcName, options) {
   };
 
   return stepTrios(function(tL, t, tR) {
-    if (t.type === 'token' && t.token === 'operator' && t.value === symbol) {
+    if (lex.check(t, {token: 'operator', value: symbol})) {
       return arys[ary](tL, t, tR);
     }
     return [[tL, t], tR];
@@ -179,7 +179,7 @@ var pullOps = function(symbol, ary, funcName, options) {
 
 var pullFunctions = stepTrios(function(tL, t, tR) {
   // find [name, expr]s, and swap as fn(key=name, children=expr.children)
-  if (t.token === 'name' && tR.node === 'expr') {
+  if (lex.check(t, {token: 'name'}) && tR.node === 'expr') {
     return [[tL], astNode('func', tR.children, {
       key: t.value,
       template: t.repr + tR.template })];
@@ -189,14 +189,12 @@ var pullFunctions = stepTrios(function(tL, t, tR) {
 
 
 var pullValues = R.map(function(token) {
-  if (token.type === 'token') {
-    if (token.token === 'name') {
-      return astNode('name', [],
-        { key: token.value, template: token.repr });
-    } else if (token.token === 'literal') {
-      return astNode('literal', [],
-        { value: parseFloat(token.value), template: token.repr });
-    }
+  if (lex.check(token, {token: 'name'})) {
+    return astNode('name', [],
+      { key: token.value, template: token.repr });
+  } else if (lex.check(token, {token: 'literal'})) {
+    return astNode('literal', [],
+      { value: parseFloat(token.value), template: token.repr });
   }
   return token;
 });
@@ -205,10 +203,10 @@ var pullValues = R.map(function(token) {
 var validateOperators = function(tokens) {
   var first = tokens[0],
       last = tokens[tokens.length - 1];
-  if (first && first.token === 'operator' && first.value !== '-') {
+  if (lex.check(first, {token: 'operator'}) && !lex.check(first, {value: '-'})) {
     throw new ParseError('non-unary leading operator: ' + first.value);
   }
-  if (last && last.token === 'operator') {
+  if (lex.check(last, {token: 'operator'})) {
     throw new ParseError('trailing operator: ' + last.value);
   }
   return tokens;
@@ -225,7 +223,7 @@ var failOnBadTokens = function(tokens) {
 
 var pullRoot = function(tokens) {
   var template = R.repeatN('#', tokens.length || 0).join('');
-  if (tokens[0] && tokens[0].type === 'token' && tokens[0].token === 'space') {
+  if (lex.check(tokens[0], {token: 'space'})) {
     template = tokens.shift().repr + template;
   }
   return astNode('expr', tokens, {template: template});

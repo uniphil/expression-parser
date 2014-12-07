@@ -19,6 +19,14 @@ var mkToken = function(token, value, repr) {
 };
 
 
+var checkToken = function(token, checks) {
+  checks = checks || {};
+  return !!token && token.type === 'token' &&
+    (token.token === checks.token || !checks.token) &&
+    (token.value === checks.value || !checks.value);
+};
+
+
 var chomp = function(str) {
   var matcher = R.find(R.where({ match: function(re) { return re.test(str); } }), tokenMatches);
   var token = matcher ?
@@ -39,5 +47,6 @@ var chompReduce = function(str) {
 
 
 chompReduce.token = mkToken;
+chompReduce.check = checkToken;
 
 module.exports = chompReduce;
