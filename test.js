@@ -227,6 +227,22 @@ describe('Parser', function() {
       assert.equal(parse('1-2-3').children[0].options.key, 'sum');
     });
   });
+  describe('ParseError', function() {
+    it('should break if instantiated without "new" operator', function() {
+      assert.throws(function() { parse.ParseError(); }, Error);
+    });
+    it('should stringify to the provided message', function() {
+      assert.equal('' + (new parse.ParseError('abc')), 'abc');
+    });
+  });
+  describe('node factory', function() {
+    it('should create valid nodes with only a node name', function() {
+      var node = parse.astNode('a');
+      assert.equal(node.node, 'a');
+      assert.deepEqual(node.children, []);
+      assert.deepEqual(node.options, {});
+    });
+  });
   describe('regressions', function() {
     it('should work for 1^2-3', function() {
       assert.doesNotThrow(function() { parse('1^2-3'); }, parse.ParseError);
@@ -395,6 +411,8 @@ describe('Function compiler', function() {
   describe('sample expressions', function() {
     it('should work', function() {
       var eps = 0.00001;  // TODO: pick a non-arbitrary acceptable error
+      assert.equal(compileF('0.5')(), 0.5);
+      assert.equal(compileF('-1')(), -1);
       assert.equal(compileF('1+2*3^4/5')(), 33.4);
       assert.equal(compileF('1>2')(), 0);
       assert.equal(compileF('1>0')(), 1);

@@ -224,16 +224,10 @@ var failOnBadTokens = function(tokens) {
 
 
 var pullRoot = function(tokens) {
-  var templateStart = '',
-      templateEnd = '',
-      template;
+  var template = R.repeatN('#', tokens.length || 0).join('');
   if (tokens[0] && tokens[0].type === 'token' && tokens[0].token === 'space') {
-    templateStart = tokens.shift().repr;
+    template = tokens.shift().repr + template;
   }
-  if (tokens.slice(-1) && tokens.slice(-1).type === 'token' && tokens.slice(-1).token === 'space') {
-    templateEnd = tokens.pop().repr;
-  }
-  template = templateStart + R.repeatN('#', tokens.length || 0).join('') + templateEnd;
   return astNode('expr', tokens, {template: template});
 };
 
@@ -241,7 +235,6 @@ var pullRoot = function(tokens) {
 var stampIds = function(rootNode) {
   var i = 0;
   (function stamper(node) {
-    if (node.id) { throw new Error('node already has an id?'); }
     node.id = i++;
     R.forEach(stamper, node.children);
   })(rootNode);

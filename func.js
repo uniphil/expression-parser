@@ -75,6 +75,7 @@ var compileAST = function comp(ASTNode) {
 
 
 var functionify = function(expr) {
+  /* istanbul ignore next */
   var templateFn = function(symbols, expr) {
     symbols = symbols || {};
     return expr;
