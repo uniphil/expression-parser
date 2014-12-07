@@ -2,6 +2,7 @@ Expression Compiler
 ===================
 
 [![Build Status](https://travis-ci.org/uniphil/expression-compiler.svg?branch=master)](https://travis-ci.org/uniphil/expression-compiler)
+[![Coverage Status](https://img.shields.io/coveralls/uniphil/expression-compiler.svg)](https://coveralls.io/r/uniphil/expression-compiler)
 
 Parse math expressions to a useful AST, with built-in compilers for:
  * creating a sanitized executable javascript function
