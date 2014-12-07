@@ -52,8 +52,6 @@ describe('Lexer', function() {
       assert.propertyVal(lex('>')[0], 'token', 'operator', 'greater than is an operator');
       assert.propertyVal(lex('(')[0], 'token', 'paren', 'open parenthesis is a paren');
       assert.propertyVal(lex(')')[0], 'token', 'paren', 'close parenthesis is a paren');
-      assert.propertyVal(lex('[')[0], 'token', 'paren', 'open bracket is a paren');
-      assert.propertyVal(lex(']')[0], 'token', 'paren', 'close bracket is a paren');
     });
     it('should keep the right value', function() {
       assert.propertyVal(lex(' ')[0], 'value', ' ');
@@ -139,8 +137,6 @@ describe('Lexer', function() {
       assert.propertyVal(lex('>')[0], 'type', 'token');
       assert.propertyVal(lex('(')[0], 'type', 'token');
       assert.propertyVal(lex(')')[0], 'type', 'token');
-      assert.propertyVal(lex('[')[0], 'type', 'token');
-      assert.propertyVal(lex(']')[0], 'type', 'token');
     });
     it('should be an array of all type:"token"', function() {
       lex('1 + 1').map(function(token) {
@@ -194,6 +190,9 @@ describe('Parser', function() {
     it('should put function expressions as children', function() {
       assert.equal(parse('sin(t)').children[0].node, 'func');
       assert.equal(parse('sin(t)').children[0].children[0].node, 'name');
+    });
+    it('should reject brackets', function() {
+      assert.throws(function() { parse('[1]'); }, parse.ParseError);
     });
   });
   describe('operators', function() {
