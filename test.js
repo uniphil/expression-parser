@@ -227,6 +227,22 @@ describe('Parser', function() {
       assert.equal(parse('1-2-3').children[0].options.key, 'sum');
     });
   });
+  describe('ParseError', function() {
+    it('should break if instantiated without "new" operator', function() {
+      assert.throws(function() { parse.ParseError(); }, Error);
+    });
+    it('should stringify to the provided message', function() {
+      assert.equal('' + (new parse.ParseError('abc')), 'abc');
+    });
+  });
+  describe('node factory', function() {
+    it('should create valid nodes with only a node name', function() {
+      var node = parse.astNode('a');
+      assert.equal(node.node, 'a');
+      assert.deepEqual(node.children, []);
+      assert.deepEqual(node.options, {});
+    });
+  });
   describe('regressions', function() {
     it('should work for 1^2-3', function() {
       assert.doesNotThrow(function() { parse('1^2-3'); }, parse.ParseError);
@@ -353,7 +369,9 @@ describe('Function compiler', function() {
   describe('literals', function() {
     it('should return them', function() {
       assert.equal(compileF('0')(), 0);
+      /* istanbul ignore next */
       assert.equal(compileF('1')(), 1);
+      /* istanbul ignore next */
       assert.equal(compileF('10')(), 10);
     });
     it('should not be affected by context', function() {
@@ -363,6 +381,7 @@ describe('Function compiler', function() {
   describe('names', function() {
     it('should evaluate symbols from the provided context', function() {
       assert.equal(compileF('a')({a: 0}), 0);
+      /* istanbul ignore next */
       assert.equal(compileF('foo')({foo: 1}), 1);
     });
     it('should ignore unused symbols', function() {
@@ -370,12 +389,14 @@ describe('Function compiler', function() {
     });
     it('should return NaN when variables are missing from the context', function() {
       assert.ok(isNaN(compileF('a')()));
+      /* istanbul ignore next */
       assert.ok(isNaN(compileF('1+a')()));
     });
     it('should work with literals', function() {
       assert.equal(compileF('1+a')({a: 1}), 2);
     });
     it('should execute named functions from the context', function() {
+      /* istanbul ignore next */
       var ctx = { times2: function(n) { return n * 2; } };
       assert.equal(compileF('times2(1)')(ctx), 2);
     });
@@ -388,7 +409,9 @@ describe('Function compiler', function() {
   describe('expressions with spaces', function() {
     it('should ignore spaces', function() {
       assert.equal(compileF(' 1')(), compileF('1')());
+      /* istanbul ignore next */
       assert.equal(compileF('1 ')(), compileF('1')());
+      /* istanbul ignore next */
       assert.equal(compileF('1 + 1')(), compileF('1+1')());
     });
   });
@@ -396,20 +419,36 @@ describe('Function compiler', function() {
     it('should work', function() {
       var eps = 0.00001;  // TODO: pick a non-arbitrary acceptable error
       assert.equal(compileF('1+2*3^4/5')(), 33.4);
+      /* istanbul ignore next */
       assert.equal(compileF('1>2')(), 0);
+      /* istanbul ignore next */
       assert.equal(compileF('1>0')(), 1);
+      /* istanbul ignore next */
       assert.equal(compileF('3%2')(), 1);
+      /* istanbul ignore next */
       assert.equal(compileF('PI')(), Math.PI);
+      /* istanbul ignore next */
       assert.closeTo(compileF('sin(PI)')(), 0, eps);
+      /* istanbul ignore next */
       assert.closeTo(compileF('cos(PI)')(), -1, eps);
+    });
+    it('should handle the minus operator', function() {
+      assert.equal(compileF('-1')(), -1);
+    });
+    it('should handle explicit floats', function() {
+      assert.equal(compileF('0.5')(), 0.5);
     });
   });
   describe('regressions', function() {
     it('should not be sensitive to casing of constants in Math', function() {
       assert.equal(compileF('e')(), Math.E);
+      /* istanbul ignore next */
       assert.equal(compileF('pi')(), Math.PI);
+      /* istanbul ignore next */
       assert.equal(compileF('pI')(), Math.PI);
+      /* istanbul ignore next */
       assert.equal(compileF('Pi')(), Math.PI);
+      /* istanbul ignore next */
       assert.equal(compileF('PI')(), Math.PI);
     });
   });
