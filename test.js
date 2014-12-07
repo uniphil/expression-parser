@@ -323,6 +323,9 @@ describe('Parser', function() {
 
 describe('Echo compiler', function() {
   describe('on simple minimal-node ASTs', function() {
+    it('should work on just whitespace', function() {
+      assert.equal(compileE(' '), ' ');
+    });
     it('should work for literals', function() {
       assert.equal(compileE('1'), '1');
     });
