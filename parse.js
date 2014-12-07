@@ -250,10 +250,11 @@ var actuallyEqualOps = function(wasLower, wasHigher) {
 
 
 var pullRoot = function(tokens) {
-  var template = R.repeatN('#', tokens.length || 0).join('');
+  var template = '';
   if (lex.check(tokens[0], {token: 'space'})) {
     template = tokens.shift().repr + template;
   }
+  template += R.repeatN('#', tokens.length || 0).join('');
   return astNode('expr', tokens, {template: template});
 };
 
