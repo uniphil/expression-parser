@@ -128,9 +128,17 @@ var pullSpaces = stepTrios(function(tL, t, tR) {
 });
 
 
+var assertNotOpToken = R.forEach(function(token) {
+  if (token && token.type === 'token' && token.token === 'operator') {
+    throw new ParseError('sequential operator: ' + token.repr);
+  }
+});
+
+
 var pullOps = function(symbol, ary, funcName, options) {
   var arys = {
     unary: function(tL, t, tR) {
+      assertNotOpToken([tR]);
       var node = astNode('func', [tR],
         { key: funcName, template: t.repr + '#' });
       if (options.binarify &&
@@ -144,12 +152,14 @@ var pullOps = function(symbol, ary, funcName, options) {
       return [[tL, node], null];
     },
     binary: function(tL, t, tR) {
+      assertNotOpToken([tL, tR]);
       var node = astNode('func', [tL, tR],
         { key: funcName, template: '#' + t.repr + '#' });
       return [[node], null];
     },
     nary: function(tL, t, tR) {
       if (tR.type === 'ASTNode' && tR.node === 'func' && tR.options.key === funcName) {
+        assertNotOpToken([tL, tR]);
         tR.children.unshift(tL);
         tR.template = '#' + t.repr + tR.template;
         return [[tR], null];
@@ -205,11 +215,26 @@ var validateOperators = function(tokens) {
 };
 
 
-var failOnUnparsedTokens = function(tokens) {
+var failOnBadTokens = function(tokens) {
   R.forEach(function(token) {
     throw new ParseError('could not parse token: ' + token.value);
-  }, R.filter(R.where({type: 'token'}), tokens));
+  }, R.filter(R.where({token: null}), tokens));
   return tokens;
+};
+
+
+var pullRoot = function(tokens) {
+  var templateStart = '',
+      templateEnd = '',
+      template;
+  if (tokens[0] && tokens[0].type === 'token' && tokens[0].token === 'space') {
+    templateStart = tokens.shift().repr;
+  }
+  if (tokens.slice(-1) && tokens.slice(-1).type === 'token' && tokens.slice(-1).token === 'space') {
+    templateEnd = tokens.pop().repr;
+  }
+  template = templateStart + R.repeatN('#', tokens.length || 0).join('') + templateEnd;
+  return astNode('expr', tokens, {template: template});
 };
 
 
@@ -238,12 +263,12 @@ parseTokens = R.pipe(
   pullOps('+', 'nary', 'sum'),
   pullOps('<', 'binary', 'lessThan'),
   pullOps('>', 'binary', 'greaterThan'),
-  failOnUnparsedTokens,
-  R.lPartial(astNode, 'expr')
+  pullRoot
 );
 
 var parse = R.pipe(
   lex,
+  failOnBadTokens,
   parseTokens,
   stampIds
 );

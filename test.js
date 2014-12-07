@@ -250,6 +250,21 @@ describe('Parser', function() {
       assert.doesNotThrow(function() { parse('1 1'); }, parse.ParseError);
       assert.doesNotThrow(function() { parse('1 1 1'); }, parse.ParseError);
     });
+    it('should throw properly for "-#" (from fuzzer)', function() {
+      assert.throws(function() { parse('-#'); }, parse.ParseError);
+    });
+    it('should not die for a whitespace expression (fuzzer)', function() {
+      assert.doesNotThrow(function() { parse(' '); });
+    });
+    it('should not die for weird fuzzer discovery: "a><b"', function() {
+      assert.throws(function() { parse('a><b'); }, parse.ParseError);
+    });
+    it('should not die for weird fuzzer discovery: "a-+b"', function() {
+      assert.throws(function() { parse('a-+b'); }, parse.ParseError);
+    });
+    it('should not die for weird fuzzer discovery: "a*+b"', function() {
+      assert.throws(function() { parse('a*+b'); }, parse.ParseError);
+    });
     it('should work on some samples from the mojulo gallery', function() {
       assert.doesNotThrow(function() {
         parse('x*y*time');
